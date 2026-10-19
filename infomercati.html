@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src &#x27;none&#x27;; script-src &#x27;sha256-dPtTFnysE44sVgKIrVApC3uowE+pHw0yhsj1cqANawA=&#x27;; style-src &#x27;unsafe-inline&#x27;; connect-src &#x27;self&#x27;; img-src &#x27;self&#x27; data:; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;; object-src &#x27;none&#x27;">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>InfoMercati – sabato 21 novembre 2026</title>
+<style>
+  body { margin: 0; background: #eef1f5; color: #1b2230; font: 17px/1.65 Georgia, "Times New Roman", serif; }
+  .bar { position: sticky; top: 0; display: flex; gap: .6rem; justify-content: flex-end; flex-wrap: wrap; padding: .6rem 16px;
+          background: #ffffffe6; border-bottom: 1px solid #dfe3ea; font: 14px system-ui, -apple-system, sans-serif; z-index: 2; }
+  .bar button, .bar a { font: inherit; padding: .45rem .9rem; border-radius: 999px; border: 1px solid #1d4ed8; background: #fff; color: #1d4ed8; cursor: pointer; text-decoration: none; }
+  .bar button.primary { background: #1d4ed8; color: #fff; }
+  article { max-width: 720px; margin: 24px auto 40px; background: #fff; padding: 40px 56px 48px; border-radius: 6px; box-shadow: 0 6px 24px -12px rgba(0,0,0,.25); }
+  .mast { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 3px solid #1b2230; padding-bottom: .5rem; margin-bottom: 1.4rem;
+           font: 600 13px/1.2 system-ui, -apple-system, sans-serif; letter-spacing: .04em; text-transform: uppercase; color: #6b7585; }
+  .mast b { font: 800 22px/1 system-ui, -apple-system, sans-serif; letter-spacing: -.01em; text-transform: none; color: #1b2230; }
+  .mast b span { color: #1d4ed8; }
+  .im-title { font-size: 2rem; line-height: 1.18; margin: 0 0 .6rem; font-weight: 700; letter-spacing: -.01em; }
+  .dek { font-size: 1.15rem; line-height: 1.45; color: #3b4558; margin: 0 0 .8rem; font-style: italic; }
+  .byline { font: 13px system-ui, -apple-system, sans-serif; color: #6b7585; margin: 0 0 1.6rem; }
+  h2 { font: 700 1.12rem/1.3 system-ui, -apple-system, sans-serif; margin: 1.8rem 0 .4rem; color: #1b2230; }
+  h2.lead-h { font-size: 1.3rem; margin-top: .4rem; }
+  .lead p:first-child::first-letter { float: left; font-size: 3.1em; line-height: .9; padding: .06em .08em 0 0; font-weight: 700; color: #1d4ed8; }
+  p { margin: 0 0 1rem; text-align: justify; hyphens: auto; }
+  .num { float: right; width: 210px; margin: .3rem 0 1rem 1.4rem; padding: .9rem 1rem; background: #f3f6fc; border-left: 4px solid #1d4ed8; border-radius: 4px; }
+  .num-v { font: 800 1.7rem/1.1 system-ui, -apple-system, sans-serif; color: #1d4ed8; }
+  .num-l { font: 600 11px system-ui, -apple-system, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: #6b7585; margin: .2rem 0 .5rem; }
+  .num p { font-size: .9rem; line-height: 1.5; text-align: left; margin: 0; }
+  ul.brief { list-style: none; padding: 0; margin: 0 0 1rem; clear: both; }
+  ul.brief li { padding: .45rem 0 .45rem 1.1rem; border-bottom: 1px solid #eceff4; position: relative; font-size: .97rem; }
+  ul.brief li::before { content: "›"; position: absolute; left: 0; color: #1d4ed8; font-weight: 700; }
+  .pov { clear: both; margin-top: 1.8rem; padding: 1rem 1.2rem .3rem; background: #f8f5ef; border-radius: 6px; }
+  .pov h2 { margin-top: 0; }
+  footer { clear: both; margin-top: 2.2rem; padding-top: .8rem; border-top: 1px solid #e3e6ec; font: 11.5px/1.5 system-ui, -apple-system, sans-serif; color: #6b7585; }
+  footer p { text-align: left; margin-bottom: .4rem; }
+  .bar .note { margin-right: auto; align-self: center; color: #6b7585; font-size: 12.5px; }
+  .bar button[hidden] { display: none; }
+  .msg { max-width: 720px; margin: 12px auto 0; padding: .55rem .9rem; background: #fff7dc; border: 1px solid #f1d98e; border-radius: 8px; font: 13.5px system-ui, -apple-system, sans-serif; color: #5d4500; }
+  .msg[hidden] { display: none; }
+  body.editing #im-body { outline: 2px dashed #1d4ed8; outline-offset: 10px; border-radius: 2px; }
+  body.editing #im-body:focus { outline-color: #f59e0b; }
+  @page { size: A4; margin: 16mm; }
+  @media print { body { background: #fff; font-size: 12pt; } .bar, .msg { display: none; } article { box-shadow: none; margin: 0; padding: 0; max-width: none; } }
+  @media (max-width: 640px) { article { padding: 24px 18px; margin: 0; border-radius: 0; } p { text-align: left; }
+    .num { float: none; width: auto; margin: 0 0 1rem; } .im-title { font-size: 1.6rem; } }
+</style></head>
+<body>
+<div class=bar><a href="brief.html">← Brief</a><span class=note></span>
+<button id=edit type=button>Modifica</button><button id=save class=primary type=button hidden>Salva</button><button id=cancel type=button hidden>Annulla</button>
+
+<button id=copy type=button>Copia per email</button><button id=print class=primary type=button>Stampa / salva PDF</button></div>
+<p id=msg class=msg hidden></p>
+<article>
+<div class=mast><b>Info<span>Mercati</span></b><span>sabato 21 novembre 2026</span></div>
+<div id=im-body data-gen="2026-11-21T10:15:57+00:00"><h1 class=im-title>MPS: fratture interne e sgonfiamento IA, un quadro di incertezza per i risparmi</h1><p class=dek>Le dimissioni di Giovanni Passera e l&#x27;offerta di Opa a MPS, inferiore alla media, sollevano dubbi sulla valutazione della banca, mentre il crollo del settore IA in Europa segnala un ribaltamento strutturale.</p><p class=byline>di Alberto Garau · Consulente finanziario</p><h2 class=lead-h>MPS</h2><div class=lead><p>Giovanni Passera si è dimesso prima del voto sull&#x27;OPA. L&#x27;offerta, che prevede un corrispettivo del 15,3% (contro una media del 30%), è stata rilanciata con una componente in contanti tra 1 e 1,25 euro per azione, e include impegni specifici legati alla sede legale a Siena. Il consiglio di amministrazione ha comunque approvato all&#x27;unanimità un comunicato che giudica l&#x27;offerta &#x27;congrua&#x27;, pur riconoscendo la necessità di valutare nove aspetti, tra cui il profilo indipendente del gruppo e i rischi connessi.</p><p>Il premio offerto, inferiore alla media, solleva interrogativi sulla reale valutazione del valore e delle prospettive di crescita di MPS, e la protesta di Passera evidenzia una frattura interna sulla congruità dell&#x27;operazione. Le sinergie potenziali da 2,9 miliardi di euro sono un fattore chiave, ma la loro realizzazione dipenderà dall&#x27;integrazione dei due gruppi e dalle condizioni di mercato future. I soci di MPS dovranno considerare tutti questi elementi, non solo la congruità formale dell&#x27;offerta.</p><p>Cosa significa tutto questo per chi ha risparmi o investimenti in MPS? In terzo luogo, l&#x27;esito dell&#x27;operazione avrà un impatto sul futuro della banca e sulla sua capacità di generare valore nel lungo periodo.</p></div><aside class=num><div class=num-v>34,5 miliardi di euro</div><div class=num-l>Il numero del giorno</div><p>Un numero così elevato segnala una riorganizzazione strutturale del settore bancario italiano, con implicazioni dirette sulla concentrazione del capitale e sulla governance futura.</p></aside><h2>La svolta nei mercati: cosa significa il crollo del settore IA</h2><p>La borsa europea chiude in rosso. Non è un semplice ribaltamento temporaneo, ma un segnale che la bolla speculativa nata attorno all&#x27;IA, con aziende come Anthropic che hanno subito crolli, sta sgonfiandosi, trascinando con sé anche Wall Street.</p><h2>Il futuro delle pensioni si gioca tra cedolini e nuove nascite</h2><p>L&#x27;1 dicembre molti pensionati riceveranno un cedolino con possibili aumenti, e non si tratta di un&#x27;eccezione: alcune categorie vedranno l&#x27;assegno maggiorato, con l&#x27;aggiunta di una possibile tredicesima, una quattordicesima e altri bonus. La modalità di erogazione di questi incrementi è ancora in definizione, ma l&#x27;evento stesso è significativo perché segnala una presa di coscienza, seppur tardiva, della necessità di sostenere il sistema pensionistico.</p><p>Per chi ha risparmi, questo significa che le decisioni politiche in materia previdenziale avranno un impatto diretto sulla sostenibilità del debito pubblico e, di conseguenza, sui tassi di interesse e sulla stabilità finanziaria, fattori che influenzano la performance degli investimenti a lungo termine.</p><h2>In breve</h2><ul class=brief><li>UniCredit e il governo tedesco hanno raggiunto un accordo che dovrebbe portare maggiore chiarezza sulla gestione della banca, un fattore cruciale per la sua stabilità.</li><li>La Banca Centrale Europea si prepara a un cambio di leadership, con la Spagna destinata alla presidenza e nuove nomine al comitato esecutivo che riflettono un riposizionamento strategico.</li><li>L&#x27;Argentina ha dato il via libera all&#x27;investimento di Eni, YPF e XRG nel progetto di gas naturale liquefatto, con la firma definitiva prevista per la fine del mese.</li><li>Bitcoin ha toccato il minimo degli ultimi due anni, segnalando una fase di ribasso che impatta direttamente chi ha investito in criptovalute.</li></ul><div class=pov><h2>Il mio punto di vista</h2><p>Ritengo che l&#x27;approvazione dell&#x27;OPA da parte del consiglio di amministrazione di MPS, pur con le dimissioni di Passera, rappresenti un segnale di debolezza più che di forza per la banca e per chi ne è azionista. Il premio offerto, significativamente inferiore alla media, riflette una valutazione pessimistica del futuro di MPS, e la protesta di Passera conferma che questa valutazione non è condivisa da tutti. Il rischio principale è che l&#x27;integrazione con Intesa Sanpaolo non porti alle sinergie promesse, lasciando gli azionisti con un investimento svalutato. In concreto, nelle prossime settimane guarderò con attenzione alla partecipazione effettiva dei soci al voto sull&#x27;OPA e alle eventuali modifiche proposte dall&#x27;assemblea. Un risparmiatore prudente, in questo momento, eviterei di aumentare la mia posizione in MPS, preferendo concentrarmi su investimenti più solidi e diversificati.</p></div></div><footer><p>Fonti: ANSA Economia, Corriere Economia, Il Sole 24 Ore, Investing.com, la Repubblica Economia.</p><p>Questo commento ha finalità esclusivamente informative e non costituisce raccomandazione personalizzata né sollecitazione all&#x27;investimento. Le informazioni provengono da fonti pubbliche ritenute attendibili.</p></footer>
+</article>
+<script>(function(){
+var body=document.getElementById('im-body'),art=document.querySelector('article'),bar=document.querySelector('.bar');
+var local=location.protocol==='http:'&&/^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+var bEdit=document.getElementById('edit'),bSave=document.getElementById('save'),bCancel=document.getElementById('cancel'),
+    bReset=document.getElementById('reset'),msg=document.getElementById('msg');
+var original=body.innerHTML;
+function say(s){msg.textContent=s;msg.hidden=!s;}
+function editing(on){body.contentEditable=on?'true':'false';document.body.classList.toggle('editing',on);
+  bEdit.hidden=on;bSave.hidden=!on;bCancel.hidden=!on;if(on){body.focus();}}
+bEdit.addEventListener('click',function(){editing(true);
+  say(local?'Modifica il testo direttamente. Cmd+B grassetto, Cmd+I corsivo. Poi Salva.':
+    'Stai modificando solo questa copia (per copiarla o stamparla): per salvarla apri InfoMercati dal Mac.');});
+bCancel.addEventListener('click',function(){body.innerHTML=original;editing(false);say('');});
+bSave.addEventListener('click',function(){
+  if(!local){editing(false);say('Modifiche tenute in questa pagina: ora puoi copiarla o stamparla.');return;}
+  bSave.disabled=true;say('Salvataggio e pubblicazione in corso…');
+  fetch('/api/salva-infomercati',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({generated_at:body.getAttribute('data-gen'),html:body.innerHTML})})
+  .then(function(r){return r.json();}).then(function(res){bSave.disabled=false;
+    if(res.ok){original=body.innerHTML;editing(false);location.reload();}else{say('Non salvato: '+(res.errore||'errore'));}})
+  .catch(function(){bSave.disabled=false;say('Il servizio del Mac non risponde.');});});
+if(bReset){bReset.addEventListener('click',function(){
+  if(!confirm('Tornare al testo originale generato in automatico?'))return;
+  fetch('/api/ripristina-infomercati',{method:'POST'}).then(function(r){return r.json();})
+  .then(function(res){if(res.ok)location.reload();else say('Non riuscito: '+(res.errore||'errore'));});});}
+if(!local&&bReset)bReset.hidden=true;
+document.getElementById('print').addEventListener('click',function(){window.print();});
+document.getElementById('copy').addEventListener('click',function(){
+  var b=this;function ok(s){b.textContent=s;setTimeout(function(){b.textContent='Copia per email';},2500);}
+  var t=art.innerText;
+  function bySelection(){var r=document.createRange();r.selectNodeContents(art);var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+    var done=false;try{done=document.execCommand('copy');}catch(e){}
+    if(done){s.removeAllRanges();ok('Copiato!');}else{ok('Testo selezionato: premi Cmd+C');}}
+  if(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){
+    navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([art.innerHTML],{type:'text/html'}),
+      'text/plain':new Blob([t],{type:'text/plain'})})]).then(function(){ok('Copiato!');},bySelection);
+  }else{bySelection();}});
+})();</script>
+</body></html>
