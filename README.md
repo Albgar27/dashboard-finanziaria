@@ -110,6 +110,8 @@ richiede circa 2–3 minuti. Impostazioni in `report:` dentro `config.yaml`.
 Rigenerarlo subito: `.venv/bin/python build_dashboard.py --solo-notizie --report`.
 Fermare Ollama: `brew services stop ollama` (il Brief resta senza report finché non lo riavvii).
 
+**Tutto schermo** – pulsante con le quattro frecce in alto (o tasto F): nasconde barre e schede del browser. Esc per uscire.
+
 **Brief del mattino** – pulsante «Brief» in alto: pagina A4 con «Il punto del giorno», quotazioni e prossimi eventi macro (TradingView).
 Se il report non è disponibile (Ollama spento) al suo posto compare l'elenco delle notizie delle ultime 24 ore. «Stampa / salva PDF» per stamparla.
 

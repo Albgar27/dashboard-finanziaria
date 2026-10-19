@@ -107,6 +107,42 @@
     themeListeners.forEach(function (fn) { fn(t); });
   });
 
+  // ---------- tutto schermo ----------
+  (function () {
+    var btn = document.getElementById('fullscreen');
+    var el0 = document.documentElement;
+    var request = el0.requestFullscreen || el0.webkitRequestFullscreen;
+    if (!request) return;  // es. iPhone: il browser non lo consente
+    btn.hidden = false;
+    function current() { return document.fullscreenElement || document.webkitFullscreenElement; }
+    function toggle() {
+      if (current()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      else {
+        var p = request.call(el0);
+        if (p && p.catch) p.catch(function () {
+          btn.title = 'Il browser non consente lo schermo intero: usa Ctrl+Cmd+F (Mac) o F11 (Windows)';
+        });
+      }
+    }
+    function sync() {
+      var on = !!current();
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      btn.setAttribute('aria-label', on ? 'Esci da tutto schermo' : 'Tutto schermo');
+      btn.title = (on ? 'Esci da tutto schermo' : 'Tutto schermo') + ' (tasto F)';
+      root.classList.toggle('is-fullscreen', on);
+    }
+    btn.addEventListener('click', toggle);
+    document.addEventListener('fullscreenchange', sync);
+    document.addEventListener('webkitfullscreenchange', sync);
+    document.addEventListener('keydown', function (ev) {
+      var t = ev.target, tag = t && t.tagName;
+      if (ev.key !== 'f' && ev.key !== 'F') return;
+      if (ev.metaKey || ev.ctrlKey || ev.altKey || tag === 'INPUT' || tag === 'TEXTAREA' || (t && t.isContentEditable)) return;
+      ev.preventDefault();
+      toggle();
+    });
+  })();
+
   // ---------- intestazione ----------
   var hasOfficial = (DATA.markets || []).some(function (g) { return (g.items || []).length; });
   document.getElementById('updated').textContent = 'Notizie aggiornate il ' + fmtDateTime(DATA.generated_at) +

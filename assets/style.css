@@ -323,3 +323,10 @@ tbody th { font-weight: 600; }
 .live-sec.watch { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow); }
 @media (max-width: 640px) { .brief-btn { order: 2; } }
 
+
+/* ---------- tutto schermo ---------- */
+.icon-btn[hidden] { display: none; }
+#fullscreen .i-exit { display: none; }
+#fullscreen[aria-pressed="true"] .i-enter { display: none; }
+#fullscreen[aria-pressed="true"] .i-exit { display: block; }
+:root.is-fullscreen .hdr { position: sticky; }
