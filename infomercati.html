@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src &#x27;none&#x27;; script-src &#x27;sha256-dPtTFnysE44sVgKIrVApC3uowE+pHw0yhsj1cqANawA=&#x27;; style-src &#x27;unsafe-inline&#x27;; connect-src &#x27;self&#x27;; img-src &#x27;self&#x27; data:; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;; object-src &#x27;none&#x27;">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>InfoMercati – venerdì 30 ottobre 2026</title>
+<style>
+  body { margin: 0; background: #eef1f5; color: #1b2230; font: 17px/1.65 Georgia, "Times New Roman", serif; }
+  .bar { position: sticky; top: 0; display: flex; gap: .6rem; justify-content: flex-end; flex-wrap: wrap; padding: .6rem 16px;
+          background: #ffffffe6; border-bottom: 1px solid #dfe3ea; font: 14px system-ui, -apple-system, sans-serif; z-index: 2; }
+  .bar button, .bar a { font: inherit; padding: .45rem .9rem; border-radius: 999px; border: 1px solid #1d4ed8; background: #fff; color: #1d4ed8; cursor: pointer; text-decoration: none; }
+  .bar button.primary { background: #1d4ed8; color: #fff; }
+  article { max-width: 720px; margin: 24px auto 40px; background: #fff; padding: 40px 56px 48px; border-radius: 6px; box-shadow: 0 6px 24px -12px rgba(0,0,0,.25); }
+  .mast { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 3px solid #1b2230; padding-bottom: .5rem; margin-bottom: 1.4rem;
+           font: 600 13px/1.2 system-ui, -apple-system, sans-serif; letter-spacing: .04em; text-transform: uppercase; color: #6b7585; }
+  .mast b { font: 800 22px/1 system-ui, -apple-system, sans-serif; letter-spacing: -.01em; text-transform: none; color: #1b2230; }
+  .mast b span { color: #1d4ed8; }
+  .im-title { font-size: 2rem; line-height: 1.18; margin: 0 0 .6rem; font-weight: 700; letter-spacing: -.01em; }
+  .dek { font-size: 1.15rem; line-height: 1.45; color: #3b4558; margin: 0 0 .8rem; font-style: italic; }
+  .byline { font: 13px system-ui, -apple-system, sans-serif; color: #6b7585; margin: 0 0 1.6rem; }
+  h2 { font: 700 1.12rem/1.3 system-ui, -apple-system, sans-serif; margin: 1.8rem 0 .4rem; color: #1b2230; }
+  h2.lead-h { font-size: 1.3rem; margin-top: .4rem; }
+  .lead p:first-child::first-letter { float: left; font-size: 3.1em; line-height: .9; padding: .06em .08em 0 0; font-weight: 700; color: #1d4ed8; }
+  p { margin: 0 0 1rem; text-align: justify; hyphens: auto; }
+  .num { float: right; width: 210px; margin: .3rem 0 1rem 1.4rem; padding: .9rem 1rem; background: #f3f6fc; border-left: 4px solid #1d4ed8; border-radius: 4px; }
+  .num-v { font: 800 1.7rem/1.1 system-ui, -apple-system, sans-serif; color: #1d4ed8; }
+  .num-l { font: 600 11px system-ui, -apple-system, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: #6b7585; margin: .2rem 0 .5rem; }
+  .num p { font-size: .9rem; line-height: 1.5; text-align: left; margin: 0; }
+  ul.brief { list-style: none; padding: 0; margin: 0 0 1rem; clear: both; }
+  ul.brief li { padding: .45rem 0 .45rem 1.1rem; border-bottom: 1px solid #eceff4; position: relative; font-size: .97rem; }
+  ul.brief li::before { content: "›"; position: absolute; left: 0; color: #1d4ed8; font-weight: 700; }
+  .pov { clear: both; margin-top: 1.8rem; padding: 1rem 1.2rem .3rem; background: #f8f5ef; border-radius: 6px; }
+  .pov h2 { margin-top: 0; }
+  footer { clear: both; margin-top: 2.2rem; padding-top: .8rem; border-top: 1px solid #e3e6ec; font: 11.5px/1.5 system-ui, -apple-system, sans-serif; color: #6b7585; }
+  footer p { text-align: left; margin-bottom: .4rem; }
+  .bar .note { margin-right: auto; align-self: center; color: #6b7585; font-size: 12.5px; }
+  .bar button[hidden] { display: none; }
+  .msg { max-width: 720px; margin: 12px auto 0; padding: .55rem .9rem; background: #fff7dc; border: 1px solid #f1d98e; border-radius: 8px; font: 13.5px system-ui, -apple-system, sans-serif; color: #5d4500; }
+  .msg[hidden] { display: none; }
+  body.editing #im-body { outline: 2px dashed #1d4ed8; outline-offset: 10px; border-radius: 2px; }
+  body.editing #im-body:focus { outline-color: #f59e0b; }
+  @page { size: A4; margin: 16mm; }
+  @media print { body { background: #fff; font-size: 12pt; } .bar, .msg { display: none; } article { box-shadow: none; margin: 0; padding: 0; max-width: none; } }
+  @media (max-width: 640px) { article { padding: 24px 18px; margin: 0; border-radius: 0; } p { text-align: left; }
+    .num { float: none; width: auto; margin: 0 0 1rem; } .im-title { font-size: 1.6rem; } }
+</style></head>
+<body>
+<div class=bar><a href="brief.html">← Brief</a><span class=note></span>
+<button id=edit type=button>Modifica</button><button id=save class=primary type=button hidden>Salva</button><button id=cancel type=button hidden>Annulla</button>
+
+<button id=copy type=button>Copia per email</button><button id=print class=primary type=button>Stampa / salva PDF</button></div>
+<p id=msg class=msg hidden></p>
+<article>
+<div class=mast><b>Info<span>Mercati</span></b><span>venerdì 30 ottobre 2026</span></div>
+<div id=im-body data-gen="2026-10-30T16:45:03+00:00"><h1 class=im-title>Italia ferma, inflazione galoppa: risparmi erosi, futuro incerto per i mercati.</h1><p class=dek>Il PIL italiano si attesta a zero crescita nel terzo trimestre, mentre l&#x27;inflazione sale al 5,4%, superando le stime governative e riducendo il potere d&#x27;acquisto delle famiglie.</p><p class=byline>di Alberto Garau · Consulente finanziario</p><h2 class=lead-h>L&#x27;economia italiana si blocca: inflazione alle stelle e previsioni riviste al ribasso</h2><div class=lead><p>L&#x27;economia italiana ha sostanzialmente smesso di crescere nel terzo trimestre dell&#x27;anno. I dati Istat confermano una crescita del PIL pari a zero, dopo una variazione tendenziale dello 0,8% registrata nell&#x27;ultimo anno. Parallelamente, l&#x27;inflazione ha accelerato, raggiungendo il 5,4%. Questo dato è ben al di sopra della variazione acquisita allo 0,8% e, soprattutto, rivede al ribasso le stime del governo, che si aspettava un&#x27;inflazione dell&#x27;1% per l&#x27;intero 2026. La situazione è complessa, e le reazioni dei mercati finanziari, con una Borsa europea divisa tra cali e rialzi, ne sono un chiaro riflesso: Francoforte in calo dello 0,27%, Londra in aumento dello 0,56% e Parigi in leggero rialzo dello 0,05%.</p><p>Non è un rallentamento temporaneo, ma un segnale di un&#x27;economia che fatica a riprendersi. La crescita zero del PIL nel terzo trimestre, unita all&#x27;impennata dell&#x27;inflazione, evidenzia una perdita di dinamismo strutturale. Il governo aveva previsto una crescita più robusta e un&#x27;inflazione più contenuta, ma i dati reali dipendono da fattori esterni (tensioni geopolitiche, costi energetici) e interni (produttività, investimenti) che non si sono rivelati favorevoli. Un&#x27;inflazione elevata, a sua volta, erode il potere d&#x27;acquisto delle famiglie e aumenta i costi per le aziende, alimentando un circolo vizioso.</p><p>Per chi ha risparmi o investimenti, questo scenario impone una riflessione concreta. L&#x27;aumento dell&#x27;inflazione riduce il valore reale dei risparmi in denaro se non adeguatamente protetti.</p></div><h2>Il costo della vita erode i guadagni: un quadro a due velocità</h2><p>A ottobre, l&#x27;inflazione ha toccato il 5,4%, con un aumento mensile dei prezzi dello 0,9%. Nel settore privato, la crescita dei salari è stata ancora più contenuta, rimanendo indietro di due punti percentuali rispetto all&#x27;aumento dei prezzi. Questo divario tra inflazione e crescita salariale, sebbene generalizzato, rischia di accentuare le disuguaglianze, soprattutto per chi ha redditi più bassi e contratti di lavoro precari, come confermato dall&#x27;aumento dei contratti a termine, che ora contano 2 milioni 567mila lavoratori, a fronte di 16 milioni 490mila dipendenti permanenti. Per chi ha dei risparmi, questo scenario implica una riduzione del valore reale dei propri investimenti, dato che l&#x27;inflazione ne intacca il rendimento netto; la protezione del capitale, quindi, diventa una priorità, anche perché l&#x27;incertezza sul futuro andamento dei prezzi rende difficile pianificare a lungo termine.</p><h2>La Bce in transizione: cosa cambia per i risparmiatori</h2><p>Christine Lagarde lascerà la presidenza della Banca Centrale Europea il 7 febbraio, un evento che, apparentemente, sembra una mera sostituzione al vertice. In realtà, apre uno scenario di incertezza che va oltre la mera ricerca di un successore: sebbene l&#x27;Anasf, con la voce del suo presidente Conte, esprima gratitudine per l&#x27;operato di Lagarde e raccomandi prudenza ed una visione di lungo periodo, la transizione solleva interrogativi sulla futura politica monetaria. La Bce ha congelato i tassi di interesse, e il prossimo rialzo di dicembre è ora in bilico, con Lagarde stessa che conferma la persistenza dell&#x27;inflazione di fondo.</p><h2>In breve</h2><ul class=brief><li>La Fed ha congelato i tassi, ma non esclude nuove mosse, segnalando che la battaglia contro l&#x27;inflazione non è ancora vinta.</li><li>Giorgetti ha denunciato l&#x27;impatto devastante del caro energia, sollevando la questione a livello europeo e internazionale.</li><li>La crescita dell&#x27;Eurozona nel terzo trimestre è stata modesta, con performance divergenti tra i paesi membri.</li></ul><div class=pov><h2>Il mio punto di vista</h2><p>Non è una notizia che mi fa dormire sonni tranquilli, e direi che i mercati, con questa divisione tra cali e rialzi, non la stanno ancora prendendo del tutto sul serio. L&#x27;arresto della crescita e l&#x27;inflazione che continua a correre, superando di slancio le stime governative, rappresentano un rischio reale per il potere d&#x27;acquisto delle famiglie e la stabilità finanziaria. Il dato dell&#x27;inflazione al 5,4% è particolarmente preoccupante, perché evidenzia una pressione sui prezzi che non sembra voler diminuire, nonostante il congelamento dei tassi da parte della Bce. Certo, la transizione alla guida della Bce potrebbe portare a cambiamenti di politica, ma al momento la priorità deve essere quella di contenere l&#x27;inflazione, anche a costo di sacrificare la crescita nel breve termine. In concreto, consiglio di rivedere i portafogli, privilegiando strumenti che offrano una protezione dall&#x27;inflazione, come titoli indicizzati o asset reali, e di mantenere una buona liquidità per affrontare eventuali imprevisti.</p></div></div><footer><p>Fonti: ANSA Economia, BCE, Corriere Economia, Il Sole 24 Ore, la Repubblica Economia.</p><p>Questo commento ha finalità esclusivamente informative e non costituisce raccomandazione personalizzata né sollecitazione all&#x27;investimento. Le informazioni provengono da fonti pubbliche ritenute attendibili.</p></footer>
+</article>
+<script>(function(){
+var body=document.getElementById('im-body'),art=document.querySelector('article'),bar=document.querySelector('.bar');
+var local=location.protocol==='http:'&&/^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+var bEdit=document.getElementById('edit'),bSave=document.getElementById('save'),bCancel=document.getElementById('cancel'),
+    bReset=document.getElementById('reset'),msg=document.getElementById('msg');
+var original=body.innerHTML;
+function say(s){msg.textContent=s;msg.hidden=!s;}
+function editing(on){body.contentEditable=on?'true':'false';document.body.classList.toggle('editing',on);
+  bEdit.hidden=on;bSave.hidden=!on;bCancel.hidden=!on;if(on){body.focus();}}
+bEdit.addEventListener('click',function(){editing(true);
+  say(local?'Modifica il testo direttamente. Cmd+B grassetto, Cmd+I corsivo. Poi Salva.':
+    'Stai modificando solo questa copia (per copiarla o stamparla): per salvarla apri InfoMercati dal Mac.');});
+bCancel.addEventListener('click',function(){body.innerHTML=original;editing(false);say('');});
+bSave.addEventListener('click',function(){
+  if(!local){editing(false);say('Modifiche tenute in questa pagina: ora puoi copiarla o stamparla.');return;}
+  bSave.disabled=true;say('Salvataggio e pubblicazione in corso…');
+  fetch('/api/salva-infomercati',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({generated_at:body.getAttribute('data-gen'),html:body.innerHTML})})
+  .then(function(r){return r.json();}).then(function(res){bSave.disabled=false;
+    if(res.ok){original=body.innerHTML;editing(false);location.reload();}else{say('Non salvato: '+(res.errore||'errore'));}})
+  .catch(function(){bSave.disabled=false;say('Il servizio del Mac non risponde.');});});
+if(bReset){bReset.addEventListener('click',function(){
+  if(!confirm('Tornare al testo originale generato in automatico?'))return;
+  fetch('/api/ripristina-infomercati',{method:'POST'}).then(function(r){return r.json();})
+  .then(function(res){if(res.ok)location.reload();else say('Non riuscito: '+(res.errore||'errore'));});});}
+if(!local&&bReset)bReset.hidden=true;
+document.getElementById('print').addEventListener('click',function(){window.print();});
+document.getElementById('copy').addEventListener('click',function(){
+  var b=this;function ok(s){b.textContent=s;setTimeout(function(){b.textContent='Copia per email';},2500);}
+  var t=art.innerText;
+  function bySelection(){var r=document.createRange();r.selectNodeContents(art);var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+    var done=false;try{done=document.execCommand('copy');}catch(e){}
+    if(done){s.removeAllRanges();ok('Copiato!');}else{ok('Testo selezionato: premi Cmd+C');}}
+  if(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){
+    navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([art.innerHTML],{type:'text/html'}),
+      'text/plain':new Blob([t],{type:'text/plain'})})]).then(function(){ok('Copiato!');},bySelection);
+  }else{bySelection();}});
+})();</script>
+</body></html>
