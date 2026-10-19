@@ -17,6 +17,7 @@ nessun servizio a pagamento.
 | `assets/` | Modello HTML, CSS e JavaScript che lo script inserisce nella pagina |
 | `docs/index.html` | La pagina generata (si apre anche con doppio clic) |
 | `aggiorna.sh` | Genera la pagina e la pubblica su GitHub Pages (usato dai servizi automatici del Mac) |
+| `serve.py` | Server locale della pagina, con il comando del pulsante «Aggiorna» |
 | `requirements.txt` | Dipendenze Python (`feedparser`, `requests`, `PyYAML`) |
 
 ## Da dove arrivano i dati
@@ -76,7 +77,7 @@ manca l'indirizzo di provenienza): usa «Apri su YouTube» oppure la versione pu
 |---|---|
 | `it.dashboard-finanziaria` | aggiornamento completo (tassi ufficiali, notizie, video) alle 07:30 e 17:45, lun-ven |
 | `it.dashboard-finanziaria.notizie` | solo notizie e video ogni 30 minuti, dalle 6 alle 23 (i tassi restano quelli dell'ultimo aggiornamento completo) |
-| `it.dashboard-finanziaria.web` | piccolo server raggiungibile solo dal Mac: la pagina è su http://127.0.0.1:8799/ |
+| `it.dashboard-finanziaria.web` | `serve.py`: piccolo server raggiungibile solo dal Mac, la pagina è su http://127.0.0.1:8799/ |
 
 Il collegamento «Cruscotto finanziario» sulla Scrivania apre http://127.0.0.1:8799/. Servita così, la pagina
 riproduce i video YouTube e mostra un avviso «Dati aggiornati» quando arrivano dati nuovi; se non la stai
@@ -109,6 +110,12 @@ Si rigenera negli aggiornamenti completi (07:30 e 17:45) e al massimo ogni 3 ore
 richiede circa 2–3 minuti. Impostazioni in `report:` dentro `config.yaml`.
 Rigenerarlo subito: `.venv/bin/python build_dashboard.py --solo-notizie --report`.
 Fermare Ollama: `brew services stop ollama` (il Brief resta senza report finché non lo riavvii).
+
+**Pulsante «Aggiorna» delle notizie** – sulla versione del Mac (http://127.0.0.1:8799) scarica subito le notizie,
+rigenera e pubblica la pagina, poi la ricarica (meno di un minuto; qualche minuto se va rifatto il report del
+Brief). Il comando è accettato solo dalla dashboard stessa, uno alla volta e al massimo una volta al minuto.
+Sulla versione online non può far partire il Mac: controlla se è stata pubblicata una versione più recente e,
+se c'è, ricarica la pagina.
 
 **Tutto schermo** – pulsante con le quattro frecce in alto (o tasto F): nasconde barre e schede del browser. Esc per uscire.
 

@@ -56,7 +56,12 @@ __CSS__
   </section>
 
   <section id="notizie" class="card a-notizie" aria-labelledby="h-notizie">
-    <div class="sec-head"><h2 id="h-notizie">Notizie</h2><span id="news-count" class="tag" aria-live="polite"></span></div>
+    <div class="sec-head"><h2 id="h-notizie">Notizie</h2>
+      <div class="news-tools"><span id="news-count" class="tag" aria-live="polite"></span>
+        <button id="news-refresh" type="button" class="btn btn-sm" title="Scarica subito le ultime notizie">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><polyline points="20 4 20 9 15 9"/></svg>
+          <span>Aggiorna</span></button></div></div>
+    <p id="news-refresh-msg" class="fine" role="status" hidden></p>
     <div id="news-filters" class="chips" role="group" aria-label="Filtra per categoria"></div>
     <ol id="news" class="news"></ol>
   </section>

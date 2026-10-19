@@ -330,3 +330,12 @@ tbody th { font-weight: 600; }
 #fullscreen[aria-pressed="true"] .i-enter { display: none; }
 #fullscreen[aria-pressed="true"] .i-exit { display: block; }
 :root.is-fullscreen .hdr { position: sticky; }
+
+/* ---------- aggiorna notizie ---------- */
+.news-tools { display: flex; align-items: center; gap: .45rem; }
+.btn-sm { font-size: .74rem; padding: .25rem .65rem; }
+.btn-sm svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+#news-refresh[aria-busy="true"] svg { animation: spin 1s linear infinite; }
+#news-refresh[disabled] { opacity: .7; cursor: progress; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#news-refresh-msg { margin: -.3rem 0 .5rem; }

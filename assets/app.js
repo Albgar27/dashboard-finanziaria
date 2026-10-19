@@ -462,6 +462,45 @@
   }
   document.getElementById('search').addEventListener('input', filterNews);
 
+  // ---------- pulsante Aggiorna delle notizie ----------
+  (function () {
+    var btn = document.getElementById('news-refresh');
+    var msg = document.getElementById('news-refresh-msg');
+    var label = btn.querySelector('span');
+    var isLocal = location.protocol === 'http:' && /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+    function say(text) { msg.textContent = text; msg.hidden = !text; }
+    function busy(on, text) {
+      btn.disabled = on; btn.setAttribute('aria-busy', on ? 'true' : 'false');
+      label.textContent = on ? (text || 'Aggiornamento…') : 'Aggiorna';
+    }
+    function checkPublished() {
+      // versione online o file: non può far partire il Mac, controlla se c'è una versione più recente
+      busy(true, 'Controllo…');
+      fetch('version.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (v) {
+        if (v && v.generated_at && v.generated_at !== DATA.generated_at) { location.reload(); return; }
+        busy(false);
+        say('Sono già le notizie più recenti (' + fmtDateTime(DATA.generated_at) + '). Il Mac le aggiorna ogni 30 minuti; da qui non si può forzare.');
+      }).catch(function () {
+        busy(false);
+        say('Controllo non riuscito: ricarica la pagina.');
+      });
+    }
+    btn.addEventListener('click', function () {
+      say('');
+      if (!isLocal) { checkPublished(); return; }
+      busy(true, 'Aggiornamento…');
+      say('Scarico le ultime notizie: di solito ci vuole meno di un minuto (qualche minuto se va rifatto anche il report del Brief).');
+      fetch('/api/aggiorna-notizie', { method: 'POST', cache: 'no-store' })
+        .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
+        .then(function (res) {
+          if (res.ok) { location.reload(); return; }
+          busy(false);
+          say(res.errore ? 'Non aggiornato: ' + res.errore + '.' : 'Aggiornamento non riuscito.');
+        })
+        .catch(function () { busy(false); say('Il servizio locale non risponde: riprova tra poco.'); });
+    });
+  })();
+
   // ---------- video ----------
   var YT = 'https://www.youtube-nocookie.com/embed/';
   function ytFrame(src, title) {
