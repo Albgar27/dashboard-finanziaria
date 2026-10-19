@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.claude/
+docs/*.tmp
+.DS_Store
+build.log
+.stato_avvisi.json
+server.log
+docs/*.tmp
+docs/*.pdf
+*.pdf
+.publish/
+docs/index.html
+docs/brief.html
+docs/version.json

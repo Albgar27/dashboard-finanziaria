@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="__CSP__">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>__TITLE__</title>
+<style>
+__CSS__
+</style>
+</head>
+<body>
+<a class="skip" href="#notizie">Salta alle notizie</a>
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9"/><polyline points="6,21 12,15 17,18 26,9"/><circle cx="26" cy="9" r="2.2"/></svg>
+      <div>
+        <h1>__TITLE__</h1>
+        <p id="updated" class="sub">Caricamento…</p>
+      </div>
+    </div>
+    <div class="clock" id="clock" aria-hidden="true"></div>
+    <label class="search">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+      <span class="sr-only">Cerca nelle notizie</span>
+      <input id="search" type="search" placeholder="Cerca nelle notizie…" autocomplete="off">
+    </label>
+    <a class="brief-btn" href="brief.html" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg>Brief</a>
+    <button id="theme" type="button" class="icon-btn" aria-pressed="false" aria-label="Tema scuro">
+      <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+      <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+    </button>
+  </div>
+  <div id="ticker" class="ticker" aria-label="Quotazioni scorrevoli fornite da TradingView"></div>
+</header>
+
+<p id="stale" class="stale-bar" role="alert" hidden></p>
+<div id="fresh" class="fresh-bar" role="status" hidden><span id="fresh-text">Sono disponibili dati più recenti.</span>
+  <button id="fresh-btn" type="button" class="btn btn-primary">Aggiorna ora</button></div>
+<noscript><p class="card">Per visualizzare i dati è necessario abilitare JavaScript.</p></noscript>
+
+<main class="grid">
+  <section id="mercati" class="a-mercati" aria-labelledby="h-mercati">
+    <div class="sec-head"><h2 id="h-mercati">Mercati</h2><span class="tag tag-live"><span class="pulse" aria-hidden="true"></span>TradingView · aggiornati di continuo</span></div>
+    <div id="live"></div>
+    <div class="sec-head official-head"><h2>Tassi ufficiali</h2><span class="tag">BCE · Tesoro USA · aggiornati 2 volte al giorno</span></div>
+    <div id="kpis"></div>
+  </section>
+
+  <section id="notizie" class="card a-notizie" aria-labelledby="h-notizie">
+    <div class="sec-head"><h2 id="h-notizie">Notizie</h2><span id="news-count" class="tag" aria-live="polite"></span></div>
+    <div id="news-filters" class="chips" role="group" aria-label="Filtra per categoria"></div>
+    <ol id="news" class="news"></ol>
+  </section>
+
+  <section id="video" class="card a-video reveal" aria-labelledby="h-video">
+    <div class="sec-head"><h2 id="h-video">TG e video</h2><span class="tag">YouTube · avvio su clic</span></div>
+    <p id="video-local" class="warn" hidden>Pagina aperta come file locale: YouTube può rifiutare la riproduzione
+      incorporata (errore 153). Usa «Apri su YouTube».</p>
+    <div id="player" class="player"></div>
+    <div id="rail" class="rail" role="group" aria-label="Scegli il canale"></div>
+  </section>
+
+  <section id="link" class="a-link reveal" aria-labelledby="h-link">
+    <div class="sec-head"><h2 id="h-link">Per il consulente</h2></div>
+    <ul id="links" class="tiles"></ul>
+  </section>
+
+
+  <section id="calendario" class="card a-cal reveal" aria-labelledby="h-cal">
+    <div class="sec-head"><h2 id="h-cal">Calendario macro</h2><span class="tag tag-live"><span class="pulse" aria-hidden="true"></span>TradingView</span></div>
+    <div class="cal-layout">
+      <div>
+        <div class="cal-legend" role="note" aria-label="Legenda del calendario">
+          <div class="cal-cols">
+            <span>Ora</span><span>Paese</span><span>Importanza</span><span class="ev">Evento</span>
+            <span class="num">Attuale</span><span class="num">Previsione</span><span class="num">Precedente</span>
+          </div>
+        </div>
+        <div id="cal-widget" class="cal-widget"></div>
+        <p class="fine">Calendario economico fornito da <a href="https://it.tradingview.com/economic-calendar/" target="_blank" rel="noopener noreferrer">TradingView</a>;
+          orari nel fuso del tuo computer.</p>
+      </div>
+      <div class="cal-side">
+        <h3 id="h-guide">Guida agli eventi</h3>
+        <p class="fine">Scrivi il nome che vedi nel calendario (es. «ZEW», «CPI YY», «PMI») e clicca la voce per leggere che cosa misura.</p>
+        <label class="search guide-search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <span class="sr-only">Cerca un evento nella guida</span>
+          <input id="guide-q" type="search" placeholder="Cerca un evento…" autocomplete="off">
+        </label>
+        <div id="guide" class="guide" aria-labelledby="h-guide"></div>
+        <details class="cal-links">
+          <summary>Calendari ufficiali (BCE, Fed, Eurostat, ISTAT, BLS, BEA)</summary>
+          <ul id="calendar" class="rows"></ul>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section id="stato" class="card a-stato reveal" aria-labelledby="h-stato">
+    <div class="sec-head"><h2 id="h-stato">Stato delle fonti e crediti</h2></div>
+    <details id="status-box">
+      <summary id="status-summary">Stato delle fonti</summary>
+      <div id="status"></div>
+      <h3>Fonti scartate</h3>
+      <ul id="discarded" class="plain"></ul>
+    </details>
+  </section>
+</main>
+<footer class="foot">
+  <p>Generato automaticamente da fonti pubbliche. Marchi e contenuti appartengono ai rispettivi titolari;
+    le notizie riportano solo titolo, breve sommario del feed e link all'articolo originale.</p>
+</footer>
+<div id="tip" class="tip" role="status" hidden></div>
+<script id="dashboard-data" type="application/json">__DATA__</script>
+<script>__JS__</script>
+</body>
+</html>

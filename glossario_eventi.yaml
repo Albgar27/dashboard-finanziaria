@@ -1,0 +1,198 @@
+# Guida agli eventi del calendario macro.
+# Il widget TradingView mostra i nomi in inglese: "chiavi" contiene le parole da cercare.
+# Puoi aggiungere voci: nome, chiavi (minuscolo), descrizione (1-2 frasi).
+
+- nome: "Come leggere il calendario"
+  chiavi: ["mm", "yy", "qq", "sa", "flash", "prel", "final", "actual", "forecast", "prior", "attuale", "previsione", "precedente", "net balance"]
+  descrizione: >-
+    MM = variazione sul mese precedente, QQ = sul trimestre precedente, YY = sullo stesso periodo dell'anno prima;
+    SA = destagionalizzato. Flash/Prel = stima preliminare, Final = dato definitivo. Le colonne riportano il dato
+    pubblicato, la previsione degli analisti e il dato precedente: i mercati reagiscono soprattutto alla differenza
+    tra dato e previsione.
+
+- nome: "CPI – Prezzi al consumo"
+  chiavi: ["cpi", "consumer price", "inflation", "inflazione"]
+  descrizione: >-
+    Indice dei prezzi al consumo: misura l'inflazione su un paniere di beni e servizi. È il dato che più influenza
+    le attese sulle decisioni delle banche centrali e quindi tassi e prezzi delle obbligazioni.
+
+- nome: "Core CPI – Inflazione di fondo"
+  chiavi: ["core cpi", "core inflation", "core"]
+  descrizione: >-
+    CPI esclusi le componenti più volatili (energia e alimentari; nell'area euro anche alcol e tabacco). Mostra la
+    tendenza sottostante dei prezzi ed è molto seguita da BCE e Fed.
+
+- nome: "HICP – Inflazione armonizzata (area euro)"
+  chiavi: ["hicp", "harmonised", "ipca"]
+  descrizione: >-
+    Indice dei prezzi al consumo armonizzato calcolato con lo stesso metodo in tutta l'UE (Eurostat e istituti
+    nazionali, in Italia l'ISTAT). È la misura usata dalla BCE per il suo obiettivo di inflazione al 2%.
+
+- nome: "RPI – Indice dei prezzi al dettaglio (Regno Unito)"
+  chiavi: ["rpi", "retail price index"]
+  descrizione: >-
+    Vecchia misura britannica dell'inflazione che include anche costi legati all'abitazione come gli interessi sui
+    mutui. Si usa ancora per alcune indicizzazioni, ad esempio i titoli di Stato britannici indicizzati.
+
+- nome: "PPI – Prezzi alla produzione"
+  chiavi: ["ppi", "producer price"]
+  descrizione: >-
+    Prezzi praticati dai produttori all'uscita dalla fabbrica. Tende ad anticipare l'andamento dei prezzi al
+    consumo perché i costi si trasferiscono poi sui consumatori.
+
+- nome: "PCE – Spesa per consumi personali (USA)"
+  chiavi: ["pce", "personal consumption", "core pce"]
+  descrizione: >-
+    Indice dei prezzi della spesa per consumi negli Stati Uniti. Il PCE «core» è la misura di inflazione di
+    riferimento per l'obiettivo del 2% della Fed.
+
+- nome: "GDP – PIL"
+  chiavi: ["gdp", "pil", "gross domestic product"]
+  descrizione: >-
+    Prodotto interno lordo: misura la crescita dell'economia. Di solito esce in più stime (preliminare, seconda,
+    finale); una crescita sotto le attese pesa su borse e valute e può spingere verso tassi più bassi.
+
+- nome: "Industrial Output / Production – Produzione industriale"
+  chiavi: ["industrial output", "industrial production", "produzione industriale"]
+  descrizione: >-
+    Volume della produzione di industria, miniere e servizi di pubblica utilità. Indica lo stato del settore
+    manifatturiero e anticipa l'andamento del PIL.
+
+- nome: "Retail Sales – Vendite al dettaglio"
+  chiavi: ["retail sales", "vendite al dettaglio"]
+  descrizione: >-
+    Valore o volume delle vendite dei negozi. È una misura diretta dei consumi delle famiglie, che pesano molto sul
+    PIL, soprattutto negli Stati Uniti.
+
+- nome: "ZEW – Fiducia degli analisti (Germania / area euro)"
+  chiavi: ["zew", "economic sentiment", "current conditions"]
+  descrizione: >-
+    Sondaggio del centro di ricerca ZEW tra analisti e investitori. «Economic Sentiment» riguarda le attese a sei
+    mesi, «Current Conditions» il giudizio sulla situazione attuale; il valore è la differenza tra ottimisti e
+    pessimisti (net balance).
+
+- nome: "Ifo – Clima di fiducia delle imprese tedesche"
+  chiavi: ["ifo", "business climate"]
+  descrizione: >-
+    Indagine dell'istituto Ifo su migliaia di imprese tedesche: situazione attuale e aspettative. È uno dei
+    principali indicatori anticipatori dell'economia tedesca e quindi dell'area euro.
+
+- nome: "PMI – Indici dei responsabili acquisti"
+  chiavi: ["pmi", "manufacturing pmi", "services pmi", "composite", "purchasing managers"]
+  descrizione: >-
+    Sondaggi tra i responsabili acquisti delle imprese (manifattura, servizi o composito). Sopra 50 indicano
+    espansione, sotto 50 contrazione; escono presto nel mese e sono molto seguiti come segnale anticipatore.
+
+- nome: "ISM – PMI degli Stati Uniti"
+  chiavi: ["ism", "non-manufacturing", "ism services"]
+  descrizione: >-
+    Versione statunitense dei PMI calcolata dall'Institute for Supply Management, per manifattura e servizi.
+    Stessa lettura: sopra 50 espansione, sotto 50 contrazione.
+
+- nome: "Non-Farm Payrolls – Occupati USA"
+  chiavi: ["non-farm", "nonfarm", "payrolls", "nfp"]
+  descrizione: >-
+    Nuovi posti di lavoro creati negli Stati Uniti nel mese, esclusa l'agricoltura (Bureau of Labor Statistics,
+    di solito il primo venerdì del mese). È tra i dati che muovono di più dollaro, Treasury e borse.
+
+- nome: "Unemployment Rate – Tasso di disoccupazione"
+  chiavi: ["unemployment rate", "ilo", "disoccupazione", "unemployment"]
+  descrizione: >-
+    Quota di forza lavoro che cerca lavoro senza trovarlo. «ILO» indica la definizione internazionale
+    dell'Organizzazione internazionale del lavoro (nel Regno Unito è una media su tre mesi).
+
+- nome: "Claimant Count – Richieste di sussidio (Regno Unito)"
+  chiavi: ["claimant count", "claimant"]
+  descrizione: >-
+    Variazione del numero di persone che ricevono sussidi legati alla disoccupazione nel Regno Unito. È più
+    tempestivo del tasso di disoccupazione ILO.
+
+- nome: "Initial Jobless Claims – Nuove richieste di sussidio (USA)"
+  chiavi: ["jobless claims", "initial claims", "continuing claims"]
+  descrizione: >-
+    Numero settimanale di nuove richieste di sussidio di disoccupazione negli Stati Uniti (di solito il giovedì).
+    Un aumento persistente segnala un mercato del lavoro in indebolimento.
+
+- nome: "Average Earnings – Salari medi"
+  chiavi: ["average hourly earnings", "average earnings", "wage", "salari"]
+  descrizione: >-
+    Crescita delle retribuzioni medie. Salari in forte aumento possono alimentare l'inflazione dei servizi e
+    rendere le banche centrali più restrittive.
+
+- nome: "Building Permits / Housing Starts – Edilizia (USA)"
+  chiavi: ["building permits", "housing starts", "permits", "new home sales", "existing home sales"]
+  descrizione: >-
+    Permessi di costruzione concessi e nuovi cantieri avviati. Anticipano l'attività del settore immobiliare, molto
+    sensibile ai tassi sui mutui.
+
+- nome: "Construction Output – Produzione nelle costruzioni"
+  chiavi: ["construction output", "construction"]
+  descrizione: >-
+    Variazione dell'attività del settore delle costruzioni (edilizia e opere pubbliche). Nell'area euro è
+    pubblicato da Eurostat.
+
+- nome: "Consumer Confidence – Fiducia dei consumatori"
+  chiavi: ["consumer confidence", "fiducia dei consumatori", "consumer sentiment", "michigan"]
+  descrizione: >-
+    Sondaggi sull'umore delle famiglie (per l'area euro la Commissione europea, in Italia l'ISTAT, negli USA
+    Conference Board e Università del Michigan). Anticipano la propensione a spendere; il Michigan riporta anche le
+    attese di inflazione.
+
+- nome: "Business / Economic Sentiment – Fiducia delle imprese"
+  chiavi: ["business confidence", "economic sentiment indicator", "esi", "fiducia delle imprese", "sentiment"]
+  descrizione: >-
+    Indagini sulla fiducia di imprese e settori produttivi (ad esempio l'indicatore ESI della Commissione europea o
+    la fiducia delle imprese ISTAT). Segnalano in anticipo cambi di direzione del ciclo economico.
+
+- nome: "Trade Balance – Bilancia commerciale"
+  chiavi: ["trade balance", "exports", "imports", "bilancia commerciale"]
+  descrizione: >-
+    Differenza tra esportazioni e importazioni di beni (e talvolta servizi). Un saldo in miglioramento sostiene la
+    valuta del paese.
+
+- nome: "Current Account – Partite correnti"
+  chiavi: ["current account", "partite correnti", "conto corrente"]
+  descrizione: >-
+    Saldo di commercio di beni e servizi, redditi e trasferimenti con l'estero. Un surplus indica che il paese
+    risparmia più di quanto investe e presta al resto del mondo.
+
+- nome: "Durable Goods Orders – Ordini di beni durevoli (USA)"
+  chiavi: ["durable goods", "factory orders", "industrial orders", "ordini"]
+  descrizione: >-
+    Ordini alle imprese di beni destinati a durare (macchinari, mezzi di trasporto). Esclusi trasporti e difesa
+    sono un indicatore degli investimenti delle aziende.
+
+- nome: "Money Supply M3 – Massa monetaria"
+  chiavi: ["m3", "money supply", "private loans", "loans"]
+  descrizione: >-
+    Quantità di moneta e strumenti quasi monetari in circolazione nell'area euro, insieme ai prestiti a famiglie e
+    imprese. Indica quanto credito scorre nell'economia.
+
+- nome: "Car Registrations – Immatricolazioni auto"
+  chiavi: ["car registrations", "immatricolazioni", "new car"]
+  descrizione: >-
+    Numero di nuove auto registrate nel mese. Misura la domanda di beni durevoli e lo stato del settore auto.
+
+- nome: "Interest Rate Decision – Decisione sui tassi"
+  chiavi: ["interest rate decision", "rate decision", "deposit facility", "refinancing rate", "fed funds", "bank rate", "monetary policy"]
+  descrizione: >-
+    Annuncio della banca centrale sui tassi ufficiali. Per la BCE il riferimento principale è il tasso sui
+    depositi; per la Fed l'intervallo dei Fed Funds. Muove direttamente tassi, obbligazioni, valute e borse.
+
+- nome: "Press Conference / Speech – Conferenze e discorsi"
+  chiavi: ["press conference", "speech", "speaks", "testimony", "lagarde", "powell", "discorso"]
+  descrizione: >-
+    Interventi di presidenti e membri delle banche centrali. Non contengono dati, ma possono dare indicazioni
+    sulle prossime mosse di politica monetaria e far muovere i mercati.
+
+- nome: "Minutes / Accounts – Verbali delle riunioni"
+  chiavi: ["minutes", "accounts", "verbali", "fomc minutes"]
+  descrizione: >-
+    Resoconto della discussione nell'ultima riunione di politica monetaria (verbali FOMC della Fed, «accounts»
+    della BCE). Rivela quanto il consiglio era diviso e cosa potrebbe fare in seguito.
+
+- nome: "Crude Oil Inventories – Scorte di petrolio (USA)"
+  chiavi: ["crude oil inventories", "crude inventories", "eia", "api weekly", "oil inventories"]
+  descrizione: >-
+    Variazione settimanale delle scorte di greggio negli Stati Uniti (EIA il mercoledì, API il martedì). Un calo
+    inatteso delle scorte tende a far salire il prezzo del petrolio.

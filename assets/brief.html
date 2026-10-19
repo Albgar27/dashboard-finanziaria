@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="__CSP__">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brief del mattino</title>
+<style>
+  :root { --text: #111827; --muted: #5b6678; --border: #dfe3ea; --accent: #2f62e8; }
+  * { box-sizing: border-box; }
+  body { margin: 0 auto; max-width: 900px; padding: 24px 20px 40px; background: #ffffff; color: var(--text);
+    font: 13px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; border-bottom: 2px solid var(--text); padding-bottom: .6rem; margin-bottom: 1rem; }
+  h1 { margin: 0; font-size: 1.5rem; letter-spacing: -.01em; }
+  header p { margin: .15rem 0 0; color: var(--muted); }
+  h2 { font-size: 1.05rem; margin: 1.4rem 0 .4rem; padding-bottom: .25rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: .9rem; margin: .9rem 0 .3rem; }
+  .m { color: var(--muted); font-size: .78rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  th, td { text-align: left; padding: .3rem .35rem; border-bottom: 1px solid var(--border); }
+  thead th { font-size: .7rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  .n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  ul { margin: 0; padding-left: 1.1rem; }
+  li { margin: .25rem 0; }
+  a { color: var(--text); text-decoration: none; }
+  a:hover { color: var(--accent); text-decoration: underline; }
+  button { font: inherit; padding: .45rem .9rem; border-radius: 999px; border: 1px solid var(--accent); background: var(--accent); color: #fff; cursor: pointer; }
+  .noprint a { color: var(--accent); margin-left: .6rem; }
+  footer { margin-top: 1.6rem; padding-top: .5rem; border-top: 1px solid var(--border); color: var(--muted); font-size: .75rem; }
+  .qg { margin-top: .6rem; }
+  .qg h3 { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: .7rem 0 .35rem; }
+  .qgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; }
+  .q { border: 1px solid var(--border); border-radius: 8px; padding: 4px 6px 0; break-inside: avoid; page-break-inside: avoid; min-height: 92px; }
+  .qn { font-size: .72rem; font-weight: 650; color: var(--muted); padding: 2px 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .q .tradingview-widget-container { height: 70px; overflow: hidden; }
+  .q iframe { color-scheme: light; }
+  .calwrap { overflow: hidden; border: 1px solid var(--border); border-radius: 8px; }
+  .cal { break-inside: avoid; page-break-inside: avoid; }
+  ul { list-style: none; padding-left: 0; }
+  li { padding: .3rem 0; border-bottom: 1px solid var(--border); }
+  li .src { display: block; color: var(--muted); font-size: .75rem; margin-top: .1rem; }
+  .report { background: #f6f8fc; border: 1px solid var(--border); border-radius: 10px; padding: .2rem 1rem .8rem; }
+  .report h2 { border-bottom: 0; }
+  .report p { margin: .2rem 0 .5rem; line-height: 1.55; }
+  .report .keys li { border-bottom: 0; padding: .15rem 0 .15rem 1rem; position: relative; font-weight: 600; }
+  .report .keys li::before { content: "•"; position: absolute; left: 0; color: var(--accent); }
+  .report h3 { margin-top: .7rem; }
+  a.cite { color: var(--muted); font-size: .78em; white-space: nowrap; }
+  a.cite::before { content: "— "; }
+  .report ul li { border-bottom: 0; padding: .2rem 0; }
+  @page { size: A4; margin: 14mm; }
+  @media print {
+    body { padding: 0; max-width: none; font-size: 11px; }
+    .noprint { display: none; }
+    section { break-inside: auto; }
+    h2, h3 { break-after: avoid; }
+    li, tr, .q { break-inside: avoid; }
+    .qgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .calwrap { width: 100%; height: 413px; }
+    .calwrap .tradingview-widget-container { width: 960px !important; transform: scale(.69); transform-origin: top left; }
+    .qg h3 { break-after: avoid; }
+    .report { background: none; border: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+__BODY__
+<script>__JS__</script>
+</body>
+</html>

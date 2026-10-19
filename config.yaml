@@ -1,0 +1,273 @@
+# Configurazione della dashboard finanziaria.
+# Modifica questo file per aggiungere o togliere fonti: non serve toccare il codice.
+# Ogni voce dei mercati elenca una o più fonti in "sources": vengono provate in ordine,
+# si usa la prima che risponde. Se nessuna risponde la pagina mostra "n.d.".
+
+settings:
+  title: "Cruscotto mercati e notizie"
+  timezone: "Europe/Rome"
+  user_agent: "DashboardFinanziaria/1.0 (cruscotto personale; aggiornamento 2 volte al giorno)"
+  request_timeout: 30        # secondi per richiesta
+  pause_between_requests: 1.2  # secondi di pausa tra richieste allo stesso servizio
+  news_max_age_hours: 48     # finestra delle notizie (singoli feed possono avere un valore diverso)
+  news_max_items: 300
+  sparkline_points: 90       # punti massimi nel mini-grafico
+
+# ---------------------------------------------------------------------------
+# MERCATI
+# Tipi di fonte disponibili (tutti gratuiti e senza chiave):
+#   ecb        -> portale dati BCE (data-api.ecb.europa.eu); "key" = FLUSSO/CHIAVE_SERIE
+#   frankfurter-> api.frankfurter.dev (cambi di riferimento BCE); "symbol" = valuta
+#   treasury   -> home.treasury.gov, curva par yield; "column" = es. "10 Yr"
+#   fred       -> fred.stlouisfed.org CSV; "id" = serie (usa SOLO serie "Public Domain")
+#   none       -> nessuna fonte libera: la voce resta "n.d." con la spiegazione in "note"
+# "kind": "level" (indici, cambi, prezzi: variazioni in %) oppure
+#         "rate"  (tassi e rendimenti: variazioni in punti base)
+# ---------------------------------------------------------------------------
+markets:
+  - group: "Tassi ufficiali"
+    note: >-
+      Questi valori non sono disponibili in tempo reale: TradingView vieta di mostrare fuori dal suo sito
+      i rendimenti dei titoli di Stato, l'€STR e lo spread. €STR e Treasury sono giornalieri;
+      BTP e Bund sono la media mensile ufficiale (statistica BCE) e lo spread è calcolato su quelle medie.
+      Per l'andamento in giornata guarda i future sui titoli di Stato più in alto.
+    items:
+      - {id: estr, name: "€STR", kind: rate, decimals: 3, unit: "%", sources: [{type: ecb, key: "EST/B.EU000A2X2A25.WT"}]}
+      - {id: ust10, name: "Treasury USA 10A", kind: rate, unit: "%", sources: [{type: treasury, column: "10 Yr"}, {type: fred, id: DGS10}]}
+      - {id: btp10, name: "BTP 10A", kind: rate, decimals: 2, unit: "%", sources: [{type: ecb, key: "IRS/M.IT.L.L40.CI.0000.EUR.N.Z"}]}
+      - {id: bund10, name: "Bund 10A", kind: rate, decimals: 2, unit: "%", sources: [{type: ecb, key: "IRS/M.DE.L.L40.CI.0000.EUR.N.Z"}]}
+      - {id: spread, name: "Spread BTP-Bund", kind: spread, unit: "p.b.", sources: [{type: derived, minus: [btp10, bund10]}]}
+
+# ---------------------------------------------------------------------------
+# TRADINGVIEW: indici, materie prime, cripto e rendimenti giornalieri.
+# Nessuna API gratuita consente di scaricare questi valori, quindi la pagina usa i widget
+# gratuiti di TradingView (attribuzione visibile, dati forniti e mostrati da TradingView,
+# possono essere in ritardo o riferiti a CFD). Lo script NON scarica dati da TradingView.
+# autoload: true  -> i widget si caricano da soli quando entrano nello schermo
+# autoload: false -> si caricano solo premendo un pulsante (meno traffico verso TradingView)
+# Simboli: cerca lo strumento su tradingview.com e copia il codice "BORSA:SIMBOLO".
+# ---------------------------------------------------------------------------
+tradingview:
+  enabled: true
+  autoload: true
+  ticker:
+    - {s: "INDEX:FTSEMIB", d: "FTSE MIB"}
+    - {s: "XETR:DAX", d: "DAX"}
+    - {s: "EUREX:FESX1!", d: "Euro Stoxx 50"}
+    - {s: "FOREXCOM:SPXUSD", d: "S&P 500"}
+    - {s: "FOREXCOM:NSXUSD", d: "Nasdaq 100"}
+    - {s: "FX:EURUSD", d: "EUR/USD"}
+    - {s: "TVC:UKOIL", d: "Brent"}
+    - {s: "TVC:USOIL", d: "WTI"}
+    - {s: "TVC:GOLD", d: "Oro"}
+    - {s: "BITSTAMP:BTCEUR", d: "Bitcoin"}
+    - {s: "EUREX:FBTP1!", d: "Future BTP"}
+  # Sezioni mostrate in quest'ordine nella colonna Mercati, prima dei dati ufficiali.
+  # type: tiles    -> riquadri con mini-grafico, uno per simbolo, raggruppati
+  # type: overview -> pannello a schede con grafico e lista
+  sections:
+    - title: "Cambi"
+      type: tiles
+      groups:
+        - name: ""
+          symbols:
+            - {s: "FX:EURUSD", d: "EUR/USD"}
+            - {s: "FX:EURGBP", d: "EUR/GBP"}
+            - {s: "FX:EURCHF", d: "EUR/CHF"}
+            - {s: "FX:EURJPY", d: "EUR/JPY"}
+    - title: "Titoli di Stato (future)"
+      type: tiles
+      note: "Prezzi dei future Eurex, non rendimenti: quando il prezzo sale il rendimento scende."
+      groups:
+        - name: "Italia"
+          symbols:
+            - {s: "EUREX:FBTP1!", d: "Future BTP lungo (8,5-11 anni)"}
+            - {s: "EUREX:FBTM1!", d: "Future BTP medio (4,5-6 anni)"}
+            - {s: "EUREX:FBTS1!", d: "Future BTP breve (2-3,25 anni)"}
+        - name: "Germania, Francia, USA"
+          symbols:
+            - {s: "EUREX:FGBL1!", d: "Future Bund (8,5-10,5 anni)"}
+            - {s: "EUREX:FGBM1!", d: "Future Bobl (4,5-5,5 anni)"}
+            - {s: "EUREX:FGBS1!", d: "Future Schatz (1,75-2,25 anni)"}
+            - {s: "EUREX:FOAT1!", d: "Future OAT Francia (8,5-10,5 anni)"}
+            - {s: "OANDA:USB10YUSD", d: "Treasury USA 10 anni (CFD, prezzo)"}
+    - title: "Indici e cripto"
+      type: overview
+      tabs:
+        - title: "Indici"
+          symbols:
+            - {s: "INDEX:FTSEMIB", d: "FTSE MIB"}
+            - {s: "XETR:DAX", d: "DAX"}
+            - {s: "EURONEXT:PX1", d: "CAC 40"}
+            - {s: "EUREX:FESX1!", d: "Euro Stoxx 50 (future)"}
+            - {s: "OANDA:UK100GBP", d: "FTSE 100 (CFD)"}
+            - {s: "FOREXCOM:SPXUSD", d: "S&P 500 (CFD)"}
+            - {s: "FOREXCOM:NSXUSD", d: "Nasdaq 100 (CFD)"}
+            - {s: "FOREXCOM:DJI", d: "Dow Jones (CFD)"}
+            - {s: "OANDA:JP225USD", d: "Nikkei 225 (CFD)"}
+            - {s: "AMEX:URTH", d: "MSCI World (proxy ETF iShares URTH)"}
+        - title: "Cripto"
+          symbols:
+            - {s: "BITSTAMP:BTCEUR", d: "Bitcoin/EUR"}
+            - {s: "BITSTAMP:ETHEUR", d: "Ethereum/EUR"}
+    - title: "Energia e materie prime"
+      type: tiles
+      groups:
+        - name: "Energia"
+          symbols:
+            - {s: "TVC:UKOIL", d: "Petrolio Brent"}
+            - {s: "TVC:USOIL", d: "Petrolio WTI"}
+            - {s: "OANDA:NATGASUSD", d: "Gas naturale USA (CFD)"}
+            - {s: "CAPITALCOM:GASOLINE", d: "Benzina USA (CFD)"}
+            - {s: "CAPITALCOM:HEATINGOIL", d: "Gasolio da riscaldamento (CFD)"}
+        - name: "Metalli"
+          symbols:
+            - {s: "TVC:GOLD", d: "Oro"}
+            - {s: "TVC:SILVER", d: "Argento"}
+            - {s: "TVC:PLATINUM", d: "Platino"}
+            - {s: "TVC:PALLADIUM", d: "Palladio"}
+            - {s: "OANDA:XCUUSD", d: "Rame (CFD)"}
+        - name: "Agricole"
+          symbols:
+            - {s: "OANDA:WHEATUSD", d: "Grano (CFD)"}
+            - {s: "OANDA:CORNUSD", d: "Mais (CFD)"}
+            - {s: "OANDA:SOYBNUSD", d: "Soia (CFD)"}
+            - {s: "OANDA:SUGARUSD", d: "Zucchero (CFD)"}
+  # Calendario economico (widget TradingView). Codici paese ISO a due lettere, "eu" = area euro.
+  # importance: "-1,0,1" tutti, "0,1" media e alta, "1" solo alta.
+  calendar:
+    enabled: true
+    countries: "it,eu,de,fr,es,us,gb,ch,jp,cn"
+    importance: "0,1"
+    height: 560
+
+# ---------------------------------------------------------------------------
+# WATCHLIST: titoli/ETF che segui. Appaiono per primi nei Mercati (riquadri live TradingView).
+# "parole": nomi da cercare nei titoli delle notizie (evidenziate con ★ e filtro «Watchlist").
+#   Una parola con maiuscole viene cercata rispettando le maiuscole (es. "Generali" non trova "generali").
+# I simboli qui sotto sono ESEMPI: sostituiscili con i tuoi (codice "BORSA:SIMBOLO" da tradingview.com).
+# ---------------------------------------------------------------------------
+watchlist:
+  - {s: "MIL:ENI", d: "Eni", parole: ["Eni"]}
+  - {s: "MIL:ISP", d: "Intesa Sanpaolo", parole: ["Intesa Sanpaolo", "Intesa"]}
+  - {s: "MIL:UCG", d: "UniCredit", parole: ["UniCredit", "Unicredit"]}
+  - {s: "MIL:ENEL", d: "Enel", parole: ["Enel"]}
+  - {s: "MIL:G", d: "Generali", parole: ["Generali"]}
+  - {s: "MIL:STLAM", d: "Stellantis", parole: ["Stellantis"]}
+  - {s: "MIL:SWDA", d: "ETF iShares Core MSCI World (SWDA)", parole: []}
+  - {s: "MIL:CSSPX", d: "ETF iShares Core S&P 500 (CSSPX)", parole: []}
+
+# ---------------------------------------------------------------------------
+# AVVISI SUL MAC (notifiche di macOS). Funzionano solo quando lo script gira sul tuo Mac.
+# parole: una notizia nuova che contiene una di queste parole nel titolo genera un avviso
+#         (si aggiungono automaticamente le parole della watchlist).
+# fonti:  ogni notizia nuova di queste fonti genera un avviso.
+# soglie: avviso quando un dato ufficiale (id della sezione markets) supera/scende sotto il valore.
+# ---------------------------------------------------------------------------
+avvisi:
+  attivi: true
+  parole: ["BCE", "Lagarde", "Fed", "Powell", "BTP", "spread", "Bankitalia", "CONSOB", "IVASS", "COVIP"]
+  fonti: ["IVASS – novità", "BCE – comunicati", "Fed – politica monetaria"]
+  soglie:
+    - {id: spread, sopra: 150}
+    - {id: btp10, sopra: 5}
+    - {id: estr, sotto: 1.5}
+  max_per_aggiornamento: 5
+
+# ---------------------------------------------------------------------------
+# REPORT DEL GIORNO (nel Brief): sintesi delle notizie scritta da un modello linguistico
+# che gira sul Mac con Ollama (gratuito, nessun dato esce dal computer).
+# Il modello usa SOLO titoli e sommari delle notizie; le frasi con numeri non presenti
+# nelle notizie vengono scartate. Se Ollama non risponde il Brief resta senza report.
+# ---------------------------------------------------------------------------
+report:
+  attivo: true
+  modello: "gemma3:12b"
+  indirizzo: "http://127.0.0.1:11434"
+  ore: 24                 # notizie considerate
+  max_notizie: 40
+  rigenera_ogni_ore: 3    # negli aggiornamenti "solo notizie" il report si rifà al massimo ogni 3 ore
+  timeout: 300
+
+# ---------------------------------------------------------------------------
+# NOTIZIE (solo feed RSS/Atom pubblici)
+# category: Italia | Mercati | Macro/Banche centrali | Mondo | Previdenza e assicurazioni
+# summary: false per non mostrare il sommario (es. contenuti a pagamento)
+# max_age_hours: opzionale, sostituisce news_max_age_hours per quel feed
+# ---------------------------------------------------------------------------
+news_feeds:
+  - {name: "ANSA Economia", url: "https://www.ansa.it/sito/notizie/economia/economia_rss.xml", category: "Italia"}
+  - {name: "Il Sole 24 Ore – Finanza", url: "https://www.ilsole24ore.com/rss/finanza.xml", category: "Mercati"}
+  - {name: "Il Sole 24 Ore – Economia", url: "https://www.ilsole24ore.com/rss/economia.xml", category: "Italia"}
+  - {name: "Il Sole 24 Ore – Mondo", url: "https://www.ilsole24ore.com/rss/mondo.xml", category: "Mondo"}
+  - {name: "la Repubblica Economia", url: "https://www.repubblica.it/rss/economia/rss2.0.xml", category: "Italia"}
+  - {name: "Corriere Economia", url: "https://www.corriere.it/dynamic-feed/rss/section/Economia.xml", category: "Italia"}
+  - {name: "BBC Business", url: "https://feeds.bbci.co.uk/news/business/rss.xml", category: "Mondo"}
+  - {name: "MarketWatch", url: "https://feeds.content.dowjones.io/public/rss/mw_topstories", category: "Mercati"}
+  - {name: "Investing.com", url: "https://www.investing.com/rss/news.rss", category: "Mercati"}
+  - {name: "Financial Times", url: "https://www.ft.com/rss/home", category: "Mondo", summary: false, paywall: true}
+  - {name: "BCE – comunicati", url: "https://www.ecb.europa.eu/rss/press.html", category: "Macro/Banche centrali", max_age_hours: 168}
+  - {name: "Fed – politica monetaria", url: "https://www.federalreserve.gov/feeds/press_monetary.xml", category: "Macro/Banche centrali", max_age_hours: 168}
+  - {name: "IVASS – novità", url: "https://www.ivass.it/util/index.rss.html?lingua=it", category: "Previdenza e assicurazioni", max_age_hours: 336}
+
+# Una notizia riceve una categoria in più se il TITOLO contiene una di queste parole (regex, maiuscole ignorate).
+category_keywords:
+  "Macro/Banche centrali": "\\b(bce|fed|lagarde|powell|tassi d'interesse|inflazione|pil|banca centrale|ecb|interest rates?|inflation|gdp|fomc)\\b"
+  "Previdenza e assicurazioni": "\\b(pension[ei]\\w*|previdenz\\w*|inps|tfr|assicurazion\\w*|assicurativ\\w*|polizz[ae]\\w*|ivass|covip|fondi pensione|pensions?)\\b"
+  "Mercati": "\\b(borsa|borse|piazza affari|ftse mib|spread|btp|wall street|stocks?|s&p 500|nasdaq|titoli)\\b"
+
+# ---------------------------------------------------------------------------
+# VIDEO (canali YouTube ufficiali). L'ultimo video si ricava dall'API pubblica oEmbed di
+# YouTube (il feed videos.xml è vietato dal robots.txt di YouTube). Il lettore si carica solo su clic.
+# ---------------------------------------------------------------------------
+youtube_channels:
+  - {name: "Bloomberg Television", id: "UCIALMKvObZNtJ6AmdCLP7Lg"}
+  - {name: "Il Sole 24 ORE", id: "UCCuZicOOisRgknWUSQArudg"}
+  - {name: "RaiNews", id: "UCxqR9g_1XlnfrqwHK9viwCw"}
+  - {name: "Reuters", id: "UChqUTb7kYRX8-EiaN3XFrSQ"}
+  - {name: "euronews", id: "UCSrZ3UV4jOidv8ppoVuvW9Q"}
+  - {name: "CNBC Television", id: "UCrp_UI8XtuYfpiqluWLD7Lw"}
+
+# ---------------------------------------------------------------------------
+# LINK RAPIDI PER IL CONSULENTE
+# ---------------------------------------------------------------------------
+quick_links:
+  - {name: "Borsa Italiana", url: "https://www.borsaitaliana.it/", desc: "Quotazioni, indici, BTP sul MOT"}
+  - {name: "EMMI – Euribor", url: "https://www.emmi-benchmarks.eu/benchmarks/euribor/rates/", desc: "Tassi Euribor ufficiali"}
+  - {name: "CONSOB", url: "https://www.consob.it/", desc: "Vigilanza mercati, avvisi, albi"}
+  - {name: "IVASS", url: "https://www.ivass.it/", desc: "Vigilanza assicurativa, RUI"}
+  - {name: "COVIP", url: "https://www.covip.it/", desc: "Fondi pensione, statistiche"}
+  - {name: "Banca d'Italia", url: "https://www.bancaditalia.it/", desc: "Statistiche, bollettini, ABF"}
+  - {name: "BCE", url: "https://www.ecb.europa.eu/home/html/index.it.html", desc: "Politica monetaria, tassi ufficiali"}
+  - {name: "Federal Reserve", url: "https://www.federalreserve.gov/", desc: "FOMC, comunicati, dati"}
+  - {name: "Agenzia delle Entrate", url: "https://www.agenziaentrate.gov.it/", desc: "Fisco, circolari, scadenze"}
+  - {name: "Morningstar", url: "https://www.morningstar.it/", desc: "Fondi, ETF, rating"}
+  - {name: "justETF", url: "https://www.justetf.com/it/", desc: "Ricerca e confronto ETF"}
+
+# ---------------------------------------------------------------------------
+# CALENDARIO MACRO: il calendario è il widget TradingView (vedi tradingview.calendar);
+# qui i link alle pagine ufficiali per confermare le date.
+# ---------------------------------------------------------------------------
+calendar_links:
+  - {name: "BCE – calendario riunioni di politica monetaria", url: "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.it.html"}
+  - {name: "Fed – calendario riunioni FOMC", url: "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"}
+  - {name: "Eurostat – calendario delle pubblicazioni", url: "https://ec.europa.eu/eurostat/news/release-calendar"}
+  - {name: "ISTAT – calendario diffusione dati", url: "https://www.istat.it/calendario-diffusione/"}
+  - {name: "BLS (USA) – calendario dati su lavoro e inflazione", url: "https://www.bls.gov/schedule/news_release/"}
+  - {name: "BEA (USA) – calendario PIL e redditi", url: "https://www.bea.gov/news/schedule"}
+
+# ---------------------------------------------------------------------------
+# FONTI SCARTATE (mostrate nella pagina, sezione crediti). Aggiornare se cambiano i termini.
+# ---------------------------------------------------------------------------
+discarded_sources:
+  - {name: "Yahoo Finance / yfinance", reason: "robots.txt di query1/query2.finance.yahoo.com: «Disallow: /» per tutti i programmi automatici."}
+  - {name: "Stooq", reason: "robots.txt «Disallow: /» per i programmi automatici e verifica anti-bot in JavaScript."}
+  - {name: "FRED – S&P 500, Dow Jones, Nasdaq 100", reason: "Serie «Copyrighted: Pre-Approval Required»: riproduzione vietata senza permesso."}
+  - {name: "FRED – Nikkei 225", reason: "La ridistribuzione a terzi richiede il permesso di Nikkei Inc."}
+  - {name: "FRED – Bitcoin (Coinbase)", reason: "Coinbase vieta la riproduzione dei dati in qualsiasi forma."}
+  - {name: "BCE – Euribor e Euro Stoxx 50", reason: "Dati di fornitori terzi (Refinitiv, DataStream): la politica di riuso BCE esclude i dati di terzi senza permesso."}
+  - {name: "CoinGecko API", reason: "robots.txt vieta /api/v3."}
+  - {name: "Feed RSS Banca d'Italia", reason: "I feed stanno sotto /util/, che il robots.txt di bancaditalia.it vieta."}
+  - {name: "Feed YouTube videos.xml", reason: "Il robots.txt di YouTube vieta /feeds/videos.xml: si usa l'API pubblica oEmbed."}
+  - {name: "COVIP e CONSOB (feed)", reason: "Nessun feed RSS ufficiale trovato: solo link al sito."}
+  - {name: "Class CNBC / Milano Finanza (YouTube)", reason: "Nessun canale YouTube ufficiale verificabile trovato."}
