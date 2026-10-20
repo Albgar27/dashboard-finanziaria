@@ -108,6 +108,13 @@ Si rigenera negli aggiornamenti completi (07:30 e 17:45) e al massimo ogni 3 ore
 richiede circa 5 minuti. Impostazioni in `report:` dentro `config.yaml`.
 Rigenerarlo subito: `./aggiorna.sh --solo-notizie --report`. Fermare Ollama: `brew services stop ollama`.
 
+**Lettera ai clienti** (`lettera.html`, link «Lettera ai clienti» nel Brief) – lo stesso report scritto in prima
+persona, in tono da consulente, con saluto, firma (Alberto Garau, Consulente finanziario), fonti in calce e una
+breve nota legale. Senza riferimenti numerici. «Copia per email» copia il testo formattato da incollare in Mail o
+Gmail; «Stampa / salva PDF» crea il PDF da allegare. Firma, ruolo, saluto e nota legale si cambiano in `report:`
+dentro `config.yaml` (lascia `nota_legale: ""` per toglierla). Il testo è generato in automatico: rileggilo
+sempre prima di inviarlo.
+
 **Pulsante «Aggiorna» delle notizie** – sulla versione del Mac (http://127.0.0.1:8799) scarica subito le notizie,
 rigenera e pubblica la pagina, poi la ricarica (meno di un minuto; qualche minuto se va rifatto il report del
 Brief). Il comando è accettato solo dalla dashboard stessa, uno alla volta e al massimo una volta al minuto.

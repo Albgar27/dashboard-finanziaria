@@ -188,6 +188,12 @@ report:
   max_notizie: 40
   rigenera_ogni_ore: 3    # negli aggiornamenti "solo notizie" il report si rifà al massimo ogni 3 ore
   timeout: 600
+  # Lettera ai clienti (docs/lettera.html): stesso report, scritto in prima persona e firmato.
+  firma: "Alberto Garau"
+  ruolo: "Consulente finanziario"
+  saluto: "Gentili clienti,"
+  # Nota in calce alla lettera: lasciala vuota ("") per toglierla.
+  nota_legale: "Questo commento ha finalità esclusivamente informative e non costituisce raccomandazione personalizzata né sollecitazione all'investimento. Le informazioni provengono da fonti pubbliche ritenute attendibili."
 
 # ---------------------------------------------------------------------------
 # NOTIZIE (solo feed RSS/Atom pubblici)
