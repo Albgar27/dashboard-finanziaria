@@ -187,7 +187,7 @@ report:
   ore: 24                 # notizie considerate
   max_notizie: 40
   rigenera_ogni_ore: 3    # negli aggiornamenti "solo notizie" il report si rifà al massimo ogni 3 ore
-  timeout: 300
+  timeout: 600
 
 # ---------------------------------------------------------------------------
 # NOTIZIE (solo feed RSS/Atom pubblici)

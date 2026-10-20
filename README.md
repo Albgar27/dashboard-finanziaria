@@ -97,19 +97,16 @@ in Impostazioni di Sistema → Notifiche abilita «Script Editor». Lo stato del
 **Watchlist** – in `watchlist:` dentro `config.yaml`: ogni titolo/ETF compare per primo nei Mercati (riquadro
 live) e le notizie che lo citano nel titolo hanno la stella ★ e un filtro dedicato. I titoli inseriti sono esempi.
 
-**Report del giorno (nel Brief)** – «Il punto del giorno»: le principali notizie delle ultime 24 ore riassunte
-da un modello linguistico che gira sul Mac con [Ollama](https://ollama.com) (gratuito, nessun dato esce dal
-computer). Installazione già fatta: `brew install ollama`, `brew services start ollama`, `ollama pull gemma3:12b`
-(circa 8 GB; il modello più piccolo qwen2.5:7b è stato provato e scartato perché inventava dettagli).
-Come funziona: il modello riceve solo titolo e breve sommario di circa 30 notizie scelte (watchlist, banche
-centrali, mercati, Italia, notizie riprese da più testate), sceglie le più importanti e scrive **una frase per
-notizia**, con la fonte linkata. Lo script scarta ogni frase che contiene numeri o nomi propri assenti dalla
-notizia di partenza. Restano possibili imprecisioni di tono o di tema: è una sintesi automatica, da verificare
-sull'articolo prima di usarla con un cliente.
+**Report del giorno (nel Brief)** – un'analisi unica scritta da un modello linguistico che gira sul Mac con
+[Ollama](https://ollama.com) (`gemma3:12b`, gratuito, nessun dato esce dal computer): titolo, quadro della
+giornata, paragrafi per tema (mercati e materie prime, tassi e spread, Italia, scenario internazionale, banche,
+assicurazioni e risparmio, aziende in watchlist), una valutazione e i punti da monitorare, con i riferimenti in
+apice alle notizie e l'elenco delle fonti. Il modello riceve i tassi ufficiali e titolo + sommario di circa 30
+notizie scelte; lo script scarta le frasi con numeri o nomi propri che non compaiono in questi dati. Le
+valutazioni sono del modello e vanno lette come tali.
 Si rigenera negli aggiornamenti completi (07:30 e 17:45) e al massimo ogni 3 ore in quelli «solo notizie»;
-richiede circa 2–3 minuti. Impostazioni in `report:` dentro `config.yaml`.
-Rigenerarlo subito: `.venv/bin/python build_dashboard.py --solo-notizie --report`.
-Fermare Ollama: `brew services stop ollama` (il Brief resta senza report finché non lo riavvii).
+richiede circa 5 minuti. Impostazioni in `report:` dentro `config.yaml`.
+Rigenerarlo subito: `./aggiorna.sh --solo-notizie --report`. Fermare Ollama: `brew services stop ollama`.
 
 **Pulsante «Aggiorna» delle notizie** – sulla versione del Mac (http://127.0.0.1:8799) scarica subito le notizie,
 rigenera e pubblica la pagina, poi la ricarica (meno di un minuto; qualche minuto se va rifatto il report del

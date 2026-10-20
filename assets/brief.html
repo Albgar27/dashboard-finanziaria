@@ -46,8 +46,13 @@
   .report .keys li { border-bottom: 0; padding: .15rem 0 .15rem 1rem; position: relative; font-weight: 600; }
   .report .keys li::before { content: "•"; position: absolute; left: 0; color: var(--accent); }
   .report h3 { margin-top: .7rem; }
-  a.cite { color: var(--muted); font-size: .78em; white-space: nowrap; }
-  a.cite::before { content: "— "; }
+  .report .lead { font-size: 1.02em; font-weight: 500; }
+  sup a.ref { color: var(--accent); font-size: .78em; margin-left: 1px; text-decoration: none; }
+  .refs { margin-top: .8rem; font-size: .8rem; }
+  .refs summary { cursor: pointer; color: var(--muted); }
+  .refs ol { padding-left: 1.6rem; list-style: decimal; }
+  .refs li { border-bottom: 0; padding: .1rem 0; }
+  .refs .src { color: var(--muted); }
   .report ul li { border-bottom: 0; padding: .2rem 0; }
   @page { size: A4; margin: 14mm; }
   @media print {
@@ -61,6 +66,9 @@
     .calwrap .tradingview-widget-container { width: 960px !important; transform: scale(.69); transform-origin: top left; }
     .qg h3 { break-after: avoid; }
     .report { background: none; border: 1px solid var(--border); }
+    .refs { display: block; }
+    .refs summary { display: none; }
+    .refs[open], .refs { }
   }
 </style>
 </head>

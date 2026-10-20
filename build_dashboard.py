@@ -579,31 +579,27 @@ def run_alerts(cfg: dict, data: dict) -> int:
 # ---------------------------------------------------------------------------
 # Report del giorno: sintesi con un modello locale (Ollama)
 # ---------------------------------------------------------------------------
-REPORT_SYSTEM = """Sei un redattore economico italiano. Prepari la rassegna del mattino per un consulente finanziario
-a partire SOLO dalle notizie numerate che ricevi (titolo ed eventuale sommario).
-Compito:
-1. Scegli le notizie più rilevanti per mercati, tassi, banche centrali, economia italiana, assicurazioni/previdenza
-   e aziende della watchlist. Ignora curiosità, lifestyle e lettere di lettori.
-2. Per ogni notizia scelta scrivi UNA frase completa in italiano (massimo 30 parole), con parole tue,
-   che riformula fedelmente il titolo/sommario: soggetto, verbo, fatto. Non copiare il titolo.
-   - Le notizie in inglese vanno SEMPRE tradotte in italiano.
-   - Non aggiungere fatti, cause, conseguenze, numeri o nomi che non sono nella notizia.
-   - Non attribuire un dato a un paese o a un'azienda diversi da quelli della notizia.
-   - Nessun consiglio di investimento.
-   Esempi:
-   notizia "Pil cinese al 4,5% nel terzo trimestre, crescita stabile" ->
-     "In Cina il Pil del terzo trimestre è cresciuto del 4,5%, un ritmo stabile."
-   notizia "Eurozone yields firm as French unrest widens spread risk" ->
-     "I rendimenti dei titoli di Stato dell'area euro salgono mentre le proteste in Francia accrescono il rischio sugli spread."
-3. Ogni frase va associata al numero "n" della notizia da cui proviene. Non usare la stessa notizia due volte.
+REPORT_SYSTEM = """Sei un analista macro e di mercato italiano. Scrivi il report del mattino per un consulente finanziario:
+un'analisi unica e ragionata, non un elenco di notizie. Hai a disposizione un blocco DATI (valori ufficiali) e
+notizie numerate [n] (titolo e breve sommario).
+Come scrivere:
+- Collega le notizie tra loro: cause, contesto, cosa significano per mercati, tassi, valute, materie prime,
+  banche e assicurazioni, risparmio e portafogli. Esprimi valutazioni e giudizi motivati.
+- Usa i dati: cita livelli e variazioni presenti nel blocco DATI o nelle notizie.
+- I fatti e i numeri devono venire SOLO dai dati e dalle notizie forniti: non inventare valori, date, nomi o eventi
+  e non attribuire un dato a un paese o a un'azienda diversi da quelli della fonte.
+- Dopo ogni frase che riporta un fatto preso da una notizia metti il suo numero, es. [4] o [2][7]. Per i valori
+  del blocco DATI non mettere riferimenti. Le frasi di sola valutazione possono non avere riferimento.
+- Ogni "testo" è un paragrafo di prosa (stringa), mai un elenco. Nella sezione "Aziende in watchlist" racconta
+  cosa dicono le notizie sulle aziende segnate [watchlist].
+- Italiano chiaro e professionale, paragrafi di 3-6 frasi, niente elenchi puntati, niente ripetizioni.
 Rispondi SOLO con JSON:
-{"punti_chiave": [{"n": 3, "frase": "..."}],
- "temi": [{"titolo": "Mercati", "notizie": [{"n": 5, "frase": "..."}]}]}
-"punti_chiave": le 4 notizie più importanti della giornata.
-"temi": nell'ordine, solo se ci sono notizie: "Mercati" (borse, titoli, valute, materie prime),
-"Banche centrali e tassi" (BCE, Fed, tassi, rendimenti, spread), "Italia" (economia e politica economica italiana),
-"Mondo" (economia internazionale e geopolitica), "Assicurazioni e previdenza", "Watchlist" (aziende in watchlist).
-Al massimo 5 notizie per tema. Metti ogni notizia nel tema giusto."""
+{"titolo": "titolo del report (max 12 parole)",
+ "sintesi": "paragrafo iniziale con il quadro della giornata",
+ "sezioni": [{"titolo": "...", "testo": "..."}],
+ "da_monitorare": ["3-5 punti di attenzione per i prossimi giorni, una frase ciascuno"]}
+Sezioni, nell'ordine e solo se c'è materiale: "Mercati azionari e materie prime", "Tassi, spread e banche centrali",
+"Italia", "Scenario internazionale", "Banche, assicurazioni e risparmio", "Aziende in watchlist", "Valutazione"."""
 
 NUM_RE = re.compile(r"\d+(?:[.,]\d+)*")
 FIRST_PERSON_RE = re.compile(r"^[‘'\"«]?(I[’']m|I am|I |My |We[’']re|We |Our |Some people)", re.I)
@@ -677,90 +673,130 @@ def _select_for_report(news: list, now: dt.datetime, hours: int, limit: int) -> 
     return out
 
 
-def build_report(cfg: dict, news: list, now: dt.datetime, status: list) -> dict | None:
+def _data_block(markets: list) -> str:
+    lines = []
+    for g in markets or []:
+        for it in g.get("items", []):
+            if it.get("value") is None:
+                continue
+            dec = it.get("decimals") if it.get("decimals") is not None else (0 if it.get("kind") == "spread" else 2)
+            unit = " p.b." if it.get("kind") in ("rate", "spread") else " %"
+            chg = it.get("chg")
+            chg_s = "" if chg is None else f", variazione {'+' if chg >= 0 else ''}{fmt_it(chg, 0 if unit == ' p.b.' else 2)}{unit}"
+            per = "media mensile " if it.get("freq") == "M" else ""
+            lines.append(f"- {it['name']}: {fmt_it(it['value'], dec)} {it.get('unit', '')} ({per}dato del {it.get('date')}{chg_s}; fonte {it.get('source')})")
+    return "\n".join(lines)
+
+
+def _sentences(text: str) -> list[str]:
+    return [s.strip() for s in re.split(r"(?<=[.!?…])\s+(?=[A-ZÀ-Ý«\"“(])", str(text).strip()) if s.strip()]
+
+
+def _check_free_text(text: str, source_text: str, src_norm: str, allowed_nums: set, n_items: int, seen: set) -> tuple[str, int]:
+    """Tiene le frasi i cui numeri e nomi propri compaiono nei dati/notizie forniti; toglie ripetizioni e citazioni errate."""
+    kept, dropped = [], 0
+    if not isinstance(text, str):
+        return "", 0
+    text = re.sub(r"\s*\[(?:DATI|dati|Dati|fonte|\D[^\]]{0,20})\]", "", text)
+    for sent in _sentences(clean_text(text, 4000)):
+        sent = re.sub(r"\[(\d+)\]", lambda m: m.group(0) if 1 <= int(m.group(1)) <= n_items else "", sent)
+        body = re.sub(r"\[\d+\]", "", sent)
+        key = _strip_accents(re.sub(r"\W+", " ", body)).strip()
+        if not key or key in seen:
+            dropped += bool(key)
+            continue
+        bad = any(m.replace(".", "").replace(",", "") not in allowed_nums for m in NUM_RE.findall(body))
+        if not bad:
+            words = WORD_RE.findall(body)
+            for i, w in enumerate(words):
+                if i == 0 or not w[0].isupper():
+                    continue
+                k = _strip_accents(w.strip(".-'’"))
+                if len(k) >= 3 and k not in COMMON_CAPS and k[:5] not in src_norm:
+                    bad = True
+                    break
+        if bad:
+            dropped += 1
+            continue
+        seen.add(key)
+        kept.append(sent)
+    return " ".join(kept), dropped
+
+
+def build_report(cfg: dict, news: list, markets: list, now: dt.datetime, status: list) -> dict | None:
     rc = cfg.get("report") or {}
     if not rc.get("attivo"):
         return None
     items = _select_for_report(news, now, rc.get("ore", 24), rc.get("max_notizie", 40))
     if not items:
         return None
+    data_block = _data_block(markets)
     lines = []
     for i, n in enumerate(items, 1):
         extra = f" [watchlist: {', '.join(n['watch'])}]" if n.get("watch") else ""
         summ = f" — {n['summary']}" if n.get("summary") else ""
-        lines.append(f"{i}. ({n['source']}; {', '.join(n['categories'])}){extra} {n['title']}{summ}")
+        lines.append(f"[{i}] ({n['source']}; {', '.join(n['categories'])}){extra} {n['title']}{summ}")
+    user = (f"Data: {now.astimezone(ZoneInfo('Europe/Rome')):%d/%m/%Y}\n\nDATI:\n{data_block or '(nessun dato ufficiale)'}\n\n"
+            "NOTIZIE:\n" + "\n".join(lines))
     url = rc.get("indirizzo", "http://127.0.0.1:11434").rstrip("/") + "/api/chat"
     name = f"Report – Ollama {rc.get('modello')}"
     t0 = time.monotonic()
     try:
-        r = requests.post(url, timeout=rc.get("timeout", 300), json={
-            "model": rc.get("modello", "qwen2.5:7b"), "stream": False, "format": "json", "keep_alive": "1m",
-            "options": {"temperature": 0.1, "num_ctx": 8192},
-            "messages": [{"role": "system", "content": REPORT_SYSTEM},
-                         {"role": "user", "content": "Notizie:\n" + "\n".join(lines)}]})
+        r = requests.post(url, timeout=rc.get("timeout", 600), json={
+            "model": rc.get("modello", "gemma3:12b"), "stream": False, "format": "json", "keep_alive": "1m",
+            "options": {"temperature": 0.3, "num_ctx": 8192},
+            "messages": [{"role": "system", "content": REPORT_SYSTEM}, {"role": "user", "content": user}]})
         r.raise_for_status()
         raw = json.loads(r.json()["message"]["content"])
     except Exception as exc:
         status.append(status_row(name, "Report", "", False,
                                  "risposta non valida" if isinstance(exc, ValueError) else short_error(exc), now))
         return None
+    source_text = data_block + "\n" + "\n".join(n["title"] + " " + n.get("summary", "") for n in items)
+    src_norm = _strip_accents(source_text)
+    allowed = _num_forms(source_text) | {str(i) for i in range(1, len(items) + 1)}
+    seen: set = set()
     dropped = 0
-    used: set[int] = set()
 
-    def take(entries, allow_reuse=False):
+    def check(text):
         nonlocal dropped
-        out = []
-        for ent in entries if isinstance(entries, list) else []:
-            try:
-                k = int(ent.get("n"))
-            except (AttributeError, TypeError, ValueError):
-                dropped += 1
-                continue
-            if not 1 <= k <= len(items) or (k in used and not allow_reuse):
-                dropped += 1
-                continue
-            frase = _check_sentence(ent.get("frase", ""), items[k - 1])
-            if not frase:
-                dropped += 1
-                continue
-            out.append({"n": k, "frase": frase})
+        out, d = _check_free_text(text, source_text, src_norm, allowed, len(items), seen)
+        dropped += d
         return out
-
-    raw_temi = raw.get("temi") or []
-    if isinstance(raw_temi, dict):  # alcuni modelli rispondono {"Mercati": [...], ...}
-        raw_temi = [{"titolo": k, "notizie": v} for k, v in raw_temi.items()]
-    temi = []
-    for tema in raw_temi[:7]:
-        if not isinstance(tema, dict):
-            continue
-        entries = take(tema.get("notizie"))[:5]
-        used.update(e["n"] for e in entries)
-        if entries:
-            temi.append({"titolo": clean_text(str(tema.get("titolo", "")), 60), "notizie": entries})
-    punti = take(raw.get("punti_chiave"), allow_reuse=True)[:5]
-    if not (punti or temi):
-        status.append(status_row(name, "Report", "", False, "il modello non ha prodotto frasi verificabili", now))
+    sintesi = check(raw.get("sintesi", ""))
+    sezioni = []
+    raw_sez = raw.get("sezioni") or []
+    if isinstance(raw_sez, dict):
+        raw_sez = [{"titolo": k, "testo": v} for k, v in raw_sez.items()]
+    for sec in raw_sez[:8]:
+        if isinstance(sec, dict):
+            txt = check(sec.get("testo", ""))
+            if txt:
+                sezioni.append({"titolo": clean_text(str(sec.get("titolo", "")), 70), "testo": txt})
+    monitor = [x for x in (check(m) for m in (raw.get("da_monitorare") or [])[:6]) if x]
+    if not (sintesi or sezioni):
+        status.append(status_row(name, "Report", "", False, "il modello non ha prodotto testo verificabile", now))
         return None
     status.append(status_row(name, "Report", "", True,
-                             f"{len(items)} notizie fornite, {time.monotonic() - t0:.0f} s, {dropped} frasi scartate dai controlli", now))
-    return {"generated_at": now.isoformat(), "modello": rc.get("modello"), "ore": rc.get("ore", 24),
-            "punti_chiave": punti, "temi": temi,
-            "fonti": [{"n": i, "title": n["title"], "summary": n.get("summary", ""), "link": n["link"], "source": n["source"]}
-                      for i, n in enumerate(items, 1)]}
+                             f"{len(items)} notizie e {len(data_block.splitlines())} dati forniti, {time.monotonic() - t0:.0f} s, "
+                             f"{dropped} frasi scartate dai controlli", now))
+    return {"tipo": "analisi", "generated_at": now.isoformat(), "modello": rc.get("modello"), "ore": rc.get("ore", 24),
+            "titolo": clean_text(str(raw.get("titolo", "")), 120), "sintesi": sintesi, "sezioni": sezioni,
+            "da_monitorare": monitor,
+            "fonti": [{"n": i, "title": n["title"], "link": n["link"], "source": n["source"]} for i, n in enumerate(items, 1)]}
 
 
 def revalidate_report(rep: dict | None) -> dict | None:
-    """Riapplica i controlli a un report salvato (es. prodotto con regole più vecchie)."""
-    if not rep or not rep.get("fonti"):
+    """Riusa solo report nel formato attuale, ripulendo riferimenti non numerici e sezioni malformate."""
+    if not rep or rep.get("tipo") != "analisi":
         return None
-    src = {f["n"]: f for f in rep["fonti"]}
-
-    def ok(entries):
-        return [e for e in entries or [] if e.get("n") in src and _check_sentence(e.get("frase", ""), src[e["n"]]) == e.get("frase")]
+    clean = lambda s: re.sub(r"\s*\[(?:DATI|dati|Dati|fonte|\D[^\]]{0,20})\]", "", s) if isinstance(s, str) else ""
     rep = dict(rep)
-    rep["punti_chiave"] = ok(rep.get("punti_chiave"))
-    rep["temi"] = [dict(t, notizie=ok(t.get("notizie"))) for t in rep.get("temi", []) if ok(t.get("notizie"))]
-    return rep if (rep["punti_chiave"] or rep["temi"]) else None
+    rep["sintesi"] = clean(rep.get("sintesi"))
+    rep["sezioni"] = [dict(s, testo=clean(s.get("testo"))) for s in rep.get("sezioni", [])
+                      if isinstance(s.get("testo"), str) and not s["testo"].lstrip().startswith("[")]
+    rep["da_monitorare"] = [clean(m) for m in rep.get("da_monitorare", []) if isinstance(m, str)]
+    return rep
 
 
 # ---------------------------------------------------------------------------
@@ -840,7 +876,8 @@ def render_brief(data: dict, cfg: dict, tz: ZoneInfo) -> str:
                 '</div></div>')
     quotes_html = "".join(f'<div class=qg><h3>{e(g["name"])}</h3><div class=qgrid>' + "".join(quote_tile(s) for s in g["symbols"])
                           + "</div></div>" for g in groups)
-    js = "document.getElementById('print').addEventListener('click',function(){window.print();});"
+    js = ("document.getElementById('print').addEventListener('click',function(){window.print();});"
+          "window.addEventListener('beforeprint',function(){document.querySelectorAll('details').forEach(function(d){d.open=true;});});")
     csp = "; ".join(["default-src 'none'", f"script-src 'sha256-{sha256_b64(js)}' https://s3.tradingview.com",
                      "style-src 'unsafe-inline'", "frame-src https://www.tradingview-widget.com https://s.tradingview.com",
                      "img-src 'self' data:", "base-uri 'none'", "form-action 'none'", "object-src 'none'"])
@@ -854,23 +891,27 @@ def render_brief(data: dict, cfg: dict, tz: ZoneInfo) -> str:
 <script src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>""" + cal_cfg + "</script></div></div></section>") if cal.get("enabled") else ""
     rep = data.get("report")
     report_html = ""
-    if rep and (rep.get("temi") or rep.get("punti_chiave")):
+    if rep and rep.get("tipo") == "analisi" and (rep.get("sintesi") or rep.get("sezioni")):
         links = {f["n"]: f for f in rep.get("fonti", [])}
 
-        def item_html(ent):
-            src = links.get(ent["n"])
-            if not src:
-                return ""
-            return (f'<li>{e(ent["frase"])} <a class=cite href="{e(src["link"])}">{e(src["source"])}</a></li>')
+        def cite(txt):
+            out = e(txt)
+            return re.sub(r"\[(\d+)\]", lambda m: (
+                f'<sup><a class=ref href="{e(links[int(m[1])]["link"])}" title="{e(links[int(m[1])]["source"] + ": " + links[int(m[1])]["title"])}">{m[1]}</a></sup>'
+                if int(m[1]) in links else ""), out)
+        used = sorted({int(x) for txt in [rep.get("sintesi", "")] + [s["testo"] for s in rep.get("sezioni", [])] + rep.get("da_monitorare", [])
+                       for x in re.findall(r"\[(\d+)\]", txt) if int(x) in links})
         gen = dt.datetime.fromisoformat(rep["generated_at"]).astimezone(tz)
-        report_html = ('<section class=report><h2>Il punto del giorno</h2>'
-                       f'<p class=m>Sintesi automatica delle notizie delle ultime {rep.get("ore", 24)} ore scritta sul tuo Mac dal modello '
-                       f'{e(str(rep.get("modello")))} alle {gen:%H:%M}: ogni frase riformula una sola notizia, linkata alla fonte. '
-                       'Può contenere imprecisioni: verifica sull\'articolo prima di usarla.</p>'
-                       + ("<h3>In evidenza</h3><ul class=keys>" + "".join(item_html(x) for x in rep.get("punti_chiave", [])) + "</ul>"
-                          if rep.get("punti_chiave") else "")
-                       + "".join(f"<h3>{e(tm['titolo'])}</h3><ul>" + "".join(item_html(x) for x in tm["notizie"]) + "</ul>"
-                                 for tm in rep.get("temi", []))
+        report_html = ('<section class=report><h2>' + e(rep.get("titolo") or "Il punto del giorno") + '</h2>'
+                       f'<p class=m>Report automatico sulle notizie delle ultime {rep.get("ore", 24)} ore e sui dati ufficiali, '
+                       f'scritto sul tuo Mac dal modello {e(str(rep.get("modello")))} alle {gen:%H:%M}. I numeri in apice portano alla fonte.</p>'
+                       + (f'<p class=lead>{cite(rep["sintesi"])}</p>' if rep.get("sintesi") else "")
+                       + "".join(f"<h3>{e(s['titolo'])}</h3><p>{cite(s['testo'])}</p>" for s in rep.get("sezioni", []))
+                       + ("<h3>Da monitorare</h3><ul class=keys>" + "".join(f"<li>{cite(m)}</li>" for m in rep["da_monitorare"]) + "</ul>"
+                          if rep.get("da_monitorare") else "")
+                       + ("<details class=refs><summary>Fonti</summary><ol>" + "".join(
+                           f'<li value="{n}"><a href="{e(links[n]["link"])}">{e(links[n]["title"])}</a> <span class=src>{e(links[n]["source"])}</span></li>'
+                           for n in used) + "</ol></details>" if used else "")
                        + "</section>")
     # l'elenco completo delle notizie compare solo se il report non è disponibile (es. Ollama spento)
     news_html = "" if report_html else (
@@ -940,7 +981,7 @@ def main() -> int:
     stale = not report or now - dt.datetime.fromisoformat(report["generated_at"]) >= dt.timedelta(hours=every)
     if not news_only or stale or "--report" in sys.argv:
         try:
-            report = build_report(cfg, sections["news"], now, status) or report
+            report = build_report(cfg, sections["news"], sections.get("markets", []), now, status) or report
         except Exception:
             traceback.print_exc()
     tv = dict(cfg.get("tradingview") or {"enabled": False})
