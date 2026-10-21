@@ -108,12 +108,14 @@ Si rigenera negli aggiornamenti completi (07:30 e 17:45) e al massimo ogni 3 ore
 richiede circa 5 minuti. Impostazioni in `report:` dentro `config.yaml`.
 Rigenerarlo subito: `./aggiorna.sh --solo-notizie --report`. Fermare Ollama: `brew services stop ollama`.
 
-**Lettera ai clienti** (`lettera.html`, link «Lettera ai clienti» nel Brief) – lo stesso report scritto in prima
-persona, in tono da consulente, con saluto, firma (Alberto Garau, Consulente finanziario), fonti in calce e una
-breve nota legale. Senza riferimenti numerici. «Copia per email» copia il testo formattato da incollare in Mail o
-Gmail; «Stampa / salva PDF» crea il PDF da allegare. Firma, ruolo, saluto e nota legale si cambiano in `report:`
-dentro `config.yaml` (lascia `nota_legale: ""` per toglierla). Il testo è generato in automatico: rileggilo
-sempre prima di inviarlo.
+**InfoMercati** (`infomercati.html`, link «InfoMercati» nel Brief) – la newsletter per i clienti, firmata
+Alberto Garau, in stile articolo: titolo e sommario, la notizia principale della giornata raccontata per prima e
+più a fondo, «Il numero del giorno», uno o due approfondimenti, «In breve» con altre notizie non già trattate e
+«Il mio punto di vista». Le notizie sono scelte per rilevanza (temi chiave per il risparmio, quante testate le
+riprendono, fonti istituzionali); lo script scarta frasi con numeri o nomi non presenti nelle fonti, frasi fatte
+e ripetizioni. Senza riferimenti numerici, con fonti e nota legale in calce. «Copia per email» copia il testo
+formattato; «Stampa / salva PDF» crea il PDF. Firma, ruolo e nota legale in `report:` dentro `config.yaml`.
+Il testo è generato in automatico: rileggilo sempre prima di inviarlo.
 
 **Pulsante «Aggiorna» delle notizie** – sulla versione del Mac (http://127.0.0.1:8799) scarica subito le notizie,
 rigenera e pubblica la pagina, poi la ricarica (meno di un minuto; qualche minuto se va rifatto il report del

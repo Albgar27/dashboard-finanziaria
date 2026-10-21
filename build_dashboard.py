@@ -579,35 +579,27 @@ def run_alerts(cfg: dict, data: dict) -> int:
 # ---------------------------------------------------------------------------
 # Report del giorno: sintesi con un modello locale (Ollama)
 # ---------------------------------------------------------------------------
-REPORT_SYSTEM = """Sei __FIRMA__, consulente finanziario italiano. Scrivi in prima persona il tuo commento quotidiano sui
-mercati da inviare ai tuoi clienti (privati e famiglie, non addetti ai lavori). Hai un blocco DATI con valori
-ufficiali e notizie numerate [n] (titolo e breve sommario).
-Tono e stile:
-- Umano, caldo e professionale, come una lettera di un consulente di fiducia: frasi scorrevoli, niente gergo
-  inutile; quando usi un termine tecnico (spread, rendimento, future...) spiegalo in poche parole.
-- Racconta la giornata come una storia coerente: cosa è successo, perché conta, cosa può voler dire per i
-  risparmi e i portafogli. Esprimi la tua lettura e le tue valutazioni in modo misurato ("a mio avviso",
-  "ritengo", "è prudente"), senza allarmismi e senza promesse.
-- Non citare "il modello", "le notizie fornite", "i dati forniti" o le testate: scrivi come chi ha letto i giornali.
-- Niente elenchi puntati, niente saluti finali o firma (li aggiungo io), niente ripetizioni.
-- Rispetta il momento indicato in "Momento della scrittura": se è mattina parla di "ieri" e "stamattina" e non
-  dire che la giornata si è chiusa; se è sera parla della "giornata di oggi".
-- I titoli delle sezioni devono riflettere solo ciò che il paragrafo racconta.
-- Le tue valutazioni riguardano come leggere i fatti e come comportarsi (prudenza, diversificazione, orizzonte):
-  non fare previsioni su decisioni future di banche centrali, governi o aziende e non annunciare rialzi o ribassi
-  di tassi o prezzi se non sono scritti nelle notizie.
-Regole sui fatti:
-- Fatti e numeri SOLO dai DATI e dalle notizie: non inventare valori, date, nomi, eventi; non attribuire un dato
-  a un paese o a un'azienda diversi da quelli della fonte.
-- Dopo ogni frase che riporta un fatto preso da una notizia metti il suo numero, es. [4] o [2][7] (li toglierò
-  nella versione per i clienti). Per i valori del blocco DATI non mettere riferimenti.
+STYLE = """Scrivi in italiano come __FIRMA__, consulente finanziario, nella sua newsletter "InfoMercati" per i clienti
+(privati e famiglie). Stile giornalistico e personale, concreto: fatti, numeri, nomi, conseguenze per chi ha dei
+risparmi. Spiega in poche parole i termini tecnici. Vietate le formule vuote ("monitorare attentamente",
+"contesto complesso", "navigare", "è fondamentale diversificare"). Non citare "il modello", "le notizie fornite" o
+le testate. Usa SOLO i fatti e i numeri delle notizie ricevute: niente valori, nomi, eventi o previsioni inventati,
+nessun dato attribuito a un paese o a un'azienda diversi da quelli della fonte. Dopo ogni frase con un fatto metti
+il numero della notizia, es. [4] o [2][7]. __MOMENTO__ Rispondi SOLO con JSON."""
+
+SELECT_SYSTEM = """Sei il caporedattore di "InfoMercati", newsletter quotidiana di un consulente finanziario italiano per
+i suoi clienti. Ricevi notizie numerate con un punteggio di rilevanza e il numero di testate che le riprendono.
+Scegli ciò che conta davvero per chi ha risparmi investiti in Italia (mercati, tassi e spread, banche centrali,
+grandi operazioni societarie, banche e assicurazioni, conti pubblici, fisco, pensioni). Ignora cronaca,
+curiosità, lifestyle e piccole notizie aziendali estere. Non usare la stessa notizia in due posti.
 Rispondi SOLO con JSON:
-{"titolo": "titolo del commento, max 10 parole, senza data",
- "apertura": "paragrafo iniziale che dà il quadro della giornata",
- "sezioni": [{"titolo": "titolo breve e chiaro", "testo": "paragrafo di 4-6 frasi"}],
- "conclusione": "paragrafo finale con la tua valutazione complessiva e cosa seguiremo nei prossimi giorni"}
-Da 3 a 5 sezioni, sui temi più rilevanti della giornata (per esempio Borse, tassi e titoli di Stato, Italia,
-scenario internazionale, risparmio e previdenza)."""
+{"principale": n, "correlate": [n, ...],
+ "approfondimenti": [{"n": n, "correlate": [n, ...]}],
+ "numero": n,
+ "in_breve": [n, ...]}
+"principale": la notizia più importante; "correlate": fino a 3 notizie sullo stesso argomento.
+"approfondimenti": 1 o 2 temi diversi dalla principale. "numero": una notizia che contiene un dato numerico
+significativo, diversa dalle precedenti. "in_breve": 3 o 4 altre notizie utili."""
 
 NUM_RE = re.compile(r"\d+(?:[.,]\d+)*")
 FIRST_PERSON_RE = re.compile(r"^[‘'\"«]?(I[’']m|I am|I |My |We[’']re|We |Our |Some people)", re.I)
@@ -656,18 +648,30 @@ def _check_sentence(frase: str, item: dict) -> str | None:
     return frase
 
 
+KEY_TOPICS_RE = re.compile(r"\b(spread|btp|bund|bce|fed|lagarde|powell|tass[io]|rendiment|inflazion|pil|borsa|borse|ftse|"
+                           r"piazza affari|wall street|petrolio|brent|gas|oro|euro|dollaro|manovra|legge di bilancio|fisco|tasse|"
+                           r"irpef|pension|previdenz|assicura|banche|banca|opa|ops|acquisizion|fusion|utili|trimestral|rating|"
+                           r"moody|s&p|fitch|debito|deficit|dazi|recessione|occupazione|disoccupazione)", re.I)
+
+
+def _report_score(n: dict) -> int:
+    """Rilevanza per un risparmiatore italiano: watchlist, copertura su più testate, temi chiave, fonti istituzionali."""
+    s = 6 if n.get("watch") else 0
+    s += 3 * len(n.get("also", []))
+    s += 4 if "Macro/Banche centrali" in n["categories"] else 0
+    s += 3 if "Previdenza e assicurazioni" in n["categories"] else 0
+    s += 2 if "Mercati" in n["categories"] else 0
+    s += 2 if "Italia" in n["categories"] else 0
+    s += 3 if KEY_TOPICS_RE.search(n["title"]) else 0
+    s += 2 if n["source"].startswith(("BCE", "Fed", "IVASS")) else 0
+    return s
+
+
 def _select_for_report(news: list, now: dt.datetime, hours: int, limit: int) -> list:
     cutoff = now - dt.timedelta(hours=hours)
     pool = [n for n in news if dt.datetime.fromisoformat(n["date"]) >= cutoff and not FIRST_PERSON_RE.match(n["title"])]
 
-    def score(n):
-        s = 6 if n.get("watch") else 0
-        s += 2 * len(n.get("also", []))
-        s += 4 if "Macro/Banche centrali" in n["categories"] else 0
-        s += 3 if "Previdenza e assicurazioni" in n["categories"] else 0
-        s += 2 if "Mercati" in n["categories"] else 0
-        s += 2 if "Italia" in n["categories"] else 0
-        return s
+    score = _report_score
     pool.sort(key=lambda n: (score(n), n["date"]), reverse=True)
     # quote per categoria principale, per non avere solo un tipo di notizie
     quota = {"Italia": 12, "Mercati": 10, "Macro/Banche centrali": 8, "Mondo": 8, "Previdenza e assicurazioni": 5}
@@ -739,101 +743,209 @@ def _check_free_text(text: str, source_text: str, src_norm: str, allowed_nums: s
     return " ".join(kept), dropped
 
 
+def _ollama_json(rc: dict, system: str, user: str, temperature: float = 0.4) -> dict:
+    url = rc.get("indirizzo", "http://127.0.0.1:11434").rstrip("/") + "/api/chat"
+    r = requests.post(url, timeout=rc.get("timeout", 600), json={
+        "model": rc.get("modello", "gemma3:12b"), "stream": False, "format": "json", "keep_alive": "2m",
+        "options": {"temperature": temperature, "num_ctx": 8192},
+        "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]})
+    r.raise_for_status()
+    out = json.loads(r.json()["message"]["content"])
+    if not isinstance(out, dict):
+        raise ValueError("JSON non valido")
+    return out
+
+
+CLICHE_RE = re.compile(r"(navigare|scenario (complesso|incerto)|contesto (complesso|incerto|di incertezza)|"
+                       r"monitorare (attentamente|da vicino|con attenzione|costantemente)|monitoraggio costante|le armi migliori|"
+                       r"è fondamentale (rivedere|mantenere|diversificare)|prudenza e (la )?consapevolezza|"
+                       r"diversificare (gli investimenti|il portafoglio) per (proteggere|mitigare)|richiede(ndo)? un'attenta|"
+                       r"la volatilità dei mercati è una costante)", re.I)
+
+
+def _short_title(titolo: str, limit: int = 90) -> str:
+    """Accorcia un titolo troppo lungo a una parte compiuta (prima di due punti, virgola o trattino), mai con i puntini."""
+    troncato = titolo.endswith("…")
+    titolo = titolo.rstrip("…").strip()
+    # un titolo che finisce con una preposizione o un articolo è stato tagliato a metà
+    troncato = troncato or bool(re.search(r"\s(di|del|della|dei|delle|il|la|lo|le|gli|e|a|al|per|con|in|su|da|l'|dell')$", titolo, re.I))
+    if len(titolo) <= limit and not troncato:
+        return titolo
+    for sep in (":", ",", " – ", " - ", ";"):
+        head = titolo.split(sep)[0].strip()
+        if 25 <= len(head) <= limit:
+            return head
+    return titolo[:limit].rsplit(" ", 1)[0]
+
+
 def build_report(cfg: dict, news: list, markets: list, now: dt.datetime, status: list) -> dict | None:
+    """InfoMercati a passaggi: scelta delle notizie, poi ogni pezzo scritto vedendo solo le sue fonti."""
     rc = cfg.get("report") or {}
     if not rc.get("attivo"):
         return None
     items = _select_for_report(news, now, rc.get("ore", 24), rc.get("max_notizie", 40))
-    if not items:
+    if len(items) < 3:
         return None
-    data_block = _data_block(markets)
-    lines = []
-    for i, n in enumerate(items, 1):
-        extra = f" [watchlist: {', '.join(n['watch'])}]" if n.get("watch") else ""
-        summ = f" — {n['summary']}" if n.get("summary") else ""
-        lines.append(f"[{i}] ({n['source']}; {', '.join(n['categories'])}){extra} {n['title']}{summ}")
+    N = len(items)
     loc = now.astimezone(ZoneInfo("Europe/Rome"))
     fase = "mattina" if loc.hour < 13 else ("pomeriggio" if loc.hour < 18 else "sera")
-    avviso = ("ATTENZIONE: è mattina, la seduta di oggi è appena iniziata o deve ancora iniziare. Le notizie di ieri sono "
-              "di ieri: non scrivere che la giornata di oggi si è chiusa o conclusa.\n" if fase == "mattina" else "")
-    user = (f"{avviso}Momento della scrittura: {loc:%d/%m/%Y}, ore {loc:%H:%M} ({fase}). Le notizie sono delle ultime 24 ore.\n\nDATI:\n{data_block or '(nessun dato ufficiale)'}\n\n"
-            "NOTIZIE:\n" + "\n".join(lines))
-    url = rc.get("indirizzo", "http://127.0.0.1:11434").rstrip("/") + "/api/chat"
+    momento = (f"Oggi è {loc:%d/%m/%Y}, ore {loc:%H:%M} ({fase}): "
+               + ("è mattina, le notizie di ieri sono di ieri e non scrivere che la giornata si è chiusa." if fase == "mattina"
+                  else "puoi parlare della giornata di oggi."))
+    style = STYLE.replace("__FIRMA__", rc.get("firma") or "un consulente").replace("__MOMENTO__", momento)
     name = f"Report – Ollama {rc.get('modello')}"
     t0 = time.monotonic()
+    dropped = 0
+    seen: set = set()
+
+    def line(i):
+        n = items[i - 1]
+        summ = f" — {n['summary']}" if n.get("summary") else ""
+        extra = f" [watchlist: {', '.join(n['watch'])}]" if n.get("watch") else ""
+        return f"[{i}]{extra} {n['title']}{summ}"
+
+    def check_on(text, ids):
+        """Controlla il testo solo sulle notizie ids e toglie i riferimenti ad altre notizie."""
+        nonlocal dropped
+        src = "\n".join(items[i - 1]["title"] + " " + items[i - 1].get("summary", "") for i in ids)
+        out, d = _check_free_text(text, src, _strip_accents(src), _num_forms(src) | {str(i) for i in ids}, N, seen)
+        dropped += d
+        out = re.sub(r"\[(\d+)\]", lambda m: m.group(0) if int(m.group(1)) in ids else "", out)
+        sents = _sentences(out)
+        keep = [s for s in sents if not CLICHE_RE.search(s)
+                and not (fase == "mattina" and re.search(r"(giornata|seduta)[^.]{0,30}si è (chius|conclus)", s, re.I))]
+        dropped += len(sents) - len(keep)
+        return " ".join(keep)
+
+    def valid(ns, exclude=()):
+        out = []
+        for x in ns if isinstance(ns, list) else [ns]:
+            try:
+                k = int(x)
+            except (TypeError, ValueError):
+                continue
+            if 1 <= k <= N and k not in exclude and k not in out:
+                out.append(k)
+        return out
+
     try:
-        r = requests.post(url, timeout=rc.get("timeout", 600), json={
-            "model": rc.get("modello", "gemma3:12b"), "stream": False, "format": "json", "keep_alive": "1m",
-            "options": {"temperature": 0.5, "num_ctx": 8192},
-            "messages": [{"role": "system", "content": REPORT_SYSTEM.replace("__FIRMA__", rc.get("firma") or "un consulente finanziario")},
-                         {"role": "user", "content": user}]})
-        r.raise_for_status()
-        raw = json.loads(r.json()["message"]["content"])
+        # 1) scelta
+        listing = "\n".join(f"[{i}] (rilevanza {_report_score(n)}; testate {1 + len(n.get('also', []))}; {', '.join(n['categories'])}) "
+                            f"{n['title']}" for i, n in enumerate(items, 1))
+        pick = _ollama_json(rc, SELECT_SYSTEM, "NOTIZIE:\n" + listing, 0.2)
+        used: list[int] = []
+        main = valid(pick.get("principale"))[:1] or [1]
+        used += main
+        def related(base, cands):
+            """Solo notizie che condividono almeno due parole significative con la notizia di riferimento."""
+            bt = norm_tokens(items[base - 1]["title"] + " " + items[base - 1].get("summary", ""))
+            return [c for c in cands if len(bt & norm_tokens(items[c - 1]["title"] + " " + items[c - 1].get("summary", ""))) >= 2]
+        main_rel = related(main[0], valid(pick.get("correlate"), used))[:3]
+        used += main_rel
+        apps = []
+        for ap in (pick.get("approfondimenti") or [])[:2]:
+            if isinstance(ap, dict):
+                k = valid(ap.get("n"), used)[:1]
+                if k:
+                    rel = related(k[0], valid(ap.get("correlate"), used + k))[:2]
+                    apps.append(k + rel)
+                    used += k + rel
+        num_n = valid(pick.get("numero"), used)[:1]
+        used += num_n
+        brevi = valid(pick.get("in_breve"), used)[:4]
+
+        def write_section(ids, lunghezza):
+            out = _ollama_json(rc, style, f"Notizie su questo tema:\n" + "\n".join(line(i) for i in ids)
+                               + f'\n\nScrivi questo pezzo della newsletter: {lunghezza}. JSON: {{"titolo": "titolo specifico che dica cosa è successo", "testo": "..."}}'
+                               + ' (paragrafi separati da \\n\\n).')
+            paras = [check_on(p, ids) for p in str(out.get("testo", "")).split("\n\n")]
+            testo = "\n\n".join(p for p in paras if p)
+            if not testo:
+                return None
+            titolo = _short_title(clean_text(str(out.get("titolo", "")), 200))
+            if any(len(k) >= 3 and w[0].isupper() and k not in COMMON_CAPS and not re.search(r"\b" + re.escape(k[:5]), _strip_accents(testo))
+                   for i, w in enumerate(WORD_RE.findall(titolo)) if i > 0 for k in [_strip_accents(w.strip(".-'’:"))]):
+                titolo = re.split(r"[:–-]", titolo)[0].strip()
+            return {"titolo": titolo, "testo": testo}
+
+        # 2) pezzi, ognuno con le sole sue fonti
+        apertura = write_section(main + main_rel, "è l'apertura, la notizia più importante del giorno: 2 o 3 paragrafi su cosa è "
+                                 "successo, perché conta e quali effetti può avere per chi investe o risparmia")
+        approfondimenti = [s for s in (write_section(ids, "un approfondimento di un solo paragrafo da 3-5 frasi, con un taglio "
+                                                     "diverso da una cronaca: spiega il perché e le conseguenze") for ids in apps) if s]
+        numero = None
+        if num_n:
+            out = _ollama_json(rc, style, "Notizia:\n" + line(num_n[0]) + '\n\nScegli il dato numerico più significativo di questa '
+                               'notizia per la rubrica "Il numero del giorno". JSON: {"valore": "il numero con unità, es. 3,5%", '
+                               '"testo": "2 frasi: cosa misura e perché conta"}')
+            val = clean_text(str(out.get("valore", "")), 40)
+            txt = check_on(out.get("testo", ""), num_n)
+            txt = " ".join(s for s in _sentences(txt) if not re.match(r"^(Il )?numero del giorno", s, re.I))
+            if val and txt and NUM_RE.search(val) and all(
+                    m.replace(".", "").replace(",", "") in _num_forms(items[num_n[0] - 1]["title"] + " " + items[num_n[0] - 1].get("summary", ""))
+                    for m in NUM_RE.findall(val)):
+                numero = {"valore": val, "testo": txt}
+        in_breve = []
+        if brevi:
+            out = _ollama_json(rc, style, "Notizie:\n" + "\n".join(line(i) for i in brevi)
+                               + '\n\nPer la rubrica "In breve" scrivi UNA frase per notizia. JSON: {"frasi": [{"n": numero, "frase": "..."}]}')
+            for ent in out.get("frasi", []) if isinstance(out.get("frasi"), list) else []:
+                if isinstance(ent, dict):
+                    k = valid(ent.get("n"))
+                    if k and k[0] in brevi:
+                        x = check_on(str(ent.get("frase", "")).rstrip() + f" [{k[0]}]", k)
+                        if x:
+                            in_breve.append(x)
+        if not apertura:
+            raise ValueError("apertura vuota")
+        # 3) titolo, sommario e punto di vista, a partire dall'articolo già scritto e verificato
+        written = "\n\n".join([f"{apertura['titolo']}\n{apertura['testo']}"] + [f"{s['titolo']}\n{s['testo']}" for s in approfondimenti]
+                              + ([f"Il numero del giorno: {numero['valore']} — {numero['testo']}"] if numero else []))
+        all_ids = sorted(set(main + main_rel + [i for ids in apps for i in ids] + num_n))
+        out = _ollama_json(rc, style.replace("Dopo ogni frase con un fatto metti il numero della notizia, es. [4] o [2][7].", ""),
+                           "Articolo già scritto:\n" + written
+                           + '\n\nScrivi: "titolo" (forte e specifico, max 12 parole, sul tema principale), "sommario" (1-2 frasi '
+                             'sotto il titolo) e "punto_di_vista" (4-5 frasi in prima persona: la tua lettura concreta di cosa '
+                             'significano questi fatti per i risparmi e i portafogli dei clienti, citando i fatti dell\'articolo; '
+                             'niente frasi generiche). Usa solo fatti presenti nell\'articolo. JSON: {"titolo": "...", '
+                             '"sommario": "...", "punto_di_vista": "..."}', 0.5)
+        art_src = written
+        art_norm = _strip_accents(art_src)
+
+        def check_art(text):
+            nonlocal dropped
+            o, d = _check_free_text(text, art_src, art_norm, _num_forms(art_src), N, seen)
+            dropped += d
+            sents = _sentences(re.sub(r"\s*\[\d+\]", "", o))
+            keep = [s for s in sents if not CLICHE_RE.search(s)]
+            dropped += len(sents) - len(keep)
+            return " ".join(keep)
+        titolo = clean_text(str(out.get("titolo", "")), 140)
+        if titolo and not check_art(titolo.rstrip(".") + "."):
+            titolo = apertura["titolo"]
+        sommario = check_art(out.get("sommario", ""))
+        punto = check_art(out.get("punto_di_vista", ""))
     except Exception as exc:
         status.append(status_row(name, "Report", "", False,
                                  "risposta non valida" if isinstance(exc, ValueError) else short_error(exc), now))
         return None
-    closed_re = re.compile(r"(giornata|seduta)[^.]{0,30}(si è (chius|conclus)|odiern)|giornata (di oggi|odierna)|si è chiusa la giornata", re.I)
-    source_text = data_block + "\n" + "\n".join(n["title"] + " " + n.get("summary", "") for n in items)
-    src_norm = _strip_accents(source_text)
-    allowed = _num_forms(source_text) | {str(i) for i in range(1, len(items) + 1)}
-    seen: set = set()
-    dropped = 0
-
-    def check(text):
-        nonlocal dropped
-        out, d = _check_free_text(text, source_text, src_norm, allowed, len(items), seen)
-        dropped += d
-        if fase == "mattina" and out:
-            sents = _sentences(out)
-            keep = [s for s in sents if not closed_re.search(s)]
-            dropped += len(sents) - len(keep)
-            out = " ".join(keep)
-        return out
-    sintesi = check(raw.get("apertura", raw.get("sintesi", "")))
-    sezioni = []
-    raw_sez = raw.get("sezioni") or []
-    if isinstance(raw_sez, dict):
-        raw_sez = [{"titolo": k, "testo": v} for k, v in raw_sez.items()]
-    for sec in raw_sez[:8]:
-        if isinstance(sec, dict):
-            txt = check(sec.get("testo", ""))
-            if txt:
-                titolo = clean_text(str(sec.get("titolo", "")), 70)
-                # il titolo non può nominare aziende, persone o paesi assenti dal suo paragrafo
-                tnorm = _strip_accents(txt)
-                for i, w in enumerate(WORD_RE.findall(titolo)):
-                    k = _strip_accents(w.strip(".-'’:"))
-                    if i > 0 and w[0].isupper() and len(k) >= 3 and k not in COMMON_CAPS and not re.search(r"\b" + re.escape(k[:5]), tnorm):
-                        titolo = re.split(r"[:–-]", titolo)[0].strip()
-                        break
-                sezioni.append({"titolo": titolo, "testo": txt})
-    monitor = [x for x in (check(m) for m in (raw.get("da_monitorare") or [])[:6]) if x]
-    conclusione = check(raw.get("conclusione", ""))
-    if not (sintesi or sezioni):
-        status.append(status_row(name, "Report", "", False, "il modello non ha prodotto testo verificabile", now))
-        return None
     status.append(status_row(name, "Report", "", True,
-                             f"{len(items)} notizie e {len(data_block.splitlines())} dati forniti, {time.monotonic() - t0:.0f} s, "
+                             f"{N} notizie esaminate, principale [{main[0]}], {time.monotonic() - t0:.0f} s, "
                              f"{dropped} frasi scartate dai controlli", now))
-    return {"tipo": "analisi", "generated_at": now.isoformat(), "modello": rc.get("modello"), "ore": rc.get("ore", 24),
-            "titolo": clean_text(str(raw.get("titolo", "")), 120), "sintesi": sintesi, "sezioni": sezioni,
-            "da_monitorare": monitor, "conclusione": conclusione,
-            "firma": rc.get("firma", ""), "ruolo": rc.get("ruolo", ""), "saluto": rc.get("saluto", ""),
-            "nota_legale": rc.get("nota_legale", ""),
+    return {"tipo": "infomercati", "generated_at": now.isoformat(), "modello": rc.get("modello"), "ore": rc.get("ore", 24),
+            "titolo": titolo or apertura["titolo"], "sommario": sommario,
+            "apertura": apertura, "approfondimenti": approfondimenti, "numero": numero,
+            "in_breve": in_breve, "punto_di_vista": punto,
+            "firma": rc.get("firma", ""), "ruolo": rc.get("ruolo", ""), "nota_legale": rc.get("nota_legale", ""),
             "fonti": [{"n": i, "title": n["title"], "link": n["link"], "source": n["source"]} for i, n in enumerate(items, 1)]}
 
 
 def revalidate_report(rep: dict | None) -> dict | None:
-    """Riusa solo report nel formato attuale, ripulendo riferimenti non numerici e sezioni malformate."""
-    if not rep or rep.get("tipo") != "analisi":
+    """Riusa solo report nel formato attuale (sistemando i titoli troncati)."""
+    if not (rep and rep.get("tipo") == "infomercati" and rep.get("apertura")):
         return None
-    clean = lambda s: re.sub(r"\s*\[(?:DATI|dati|Dati|fonte|\D[^\]]{0,20})\]", "", s) if isinstance(s, str) else ""
-    rep = dict(rep)
-    rep["sintesi"] = clean(rep.get("sintesi"))
-    rep["sezioni"] = [dict(s, testo=clean(s.get("testo"))) for s in rep.get("sezioni", [])
-                      if isinstance(s.get("testo"), str) and not s["testo"].lstrip().startswith("[")]
-    rep["da_monitorare"] = [clean(m) for m in rep.get("da_monitorare", []) if isinstance(m, str)]
+    for s in [rep["apertura"]] + rep.get("approfondimenti", []):
+        s["titolo"] = _short_title(s.get("titolo", ""))
     return rep
 
 
@@ -929,36 +1041,19 @@ def render_brief(data: dict, cfg: dict, tz: ZoneInfo) -> str:
 <script src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>""" + cal_cfg + "</script></div></div></section>") if cal.get("enabled") else ""
     rep = data.get("report")
     report_html = ""
-    if rep and rep.get("tipo") == "analisi" and (rep.get("sintesi") or rep.get("sezioni")):
-        links = {f["n"]: f for f in rep.get("fonti", [])}
-
-        def cite(txt):
-            out = e(txt)
-            return re.sub(r"\[(\d+)\]", lambda m: (
-                f'<sup><a class=ref href="{e(links[int(m[1])]["link"])}" title="{e(links[int(m[1])]["source"] + ": " + links[int(m[1])]["title"])}">{m[1]}</a></sup>'
-                if int(m[1]) in links else ""), out)
-        used = sorted({int(x) for txt in [rep.get("sintesi", "")] + [s["testo"] for s in rep.get("sezioni", [])] + rep.get("da_monitorare", []) + [rep.get("conclusione", "")]
-                       for x in re.findall(r"\[(\d+)\]", txt) if int(x) in links})
+    if rep and rep.get("tipo") == "infomercati":
         gen = dt.datetime.fromisoformat(rep["generated_at"]).astimezone(tz)
-        report_html = ('<section class=report><h2>' + e(rep.get("titolo") or "Il punto del giorno") + '</h2>'
-                       f'<p class=m>Report automatico sulle notizie delle ultime {rep.get("ore", 24)} ore e sui dati ufficiali, '
-                       f'scritto sul tuo Mac dal modello {e(str(rep.get("modello")))} alle {gen:%H:%M}. I numeri in apice portano alla fonte.</p>'
-                       + (f'<p class=lead>{cite(rep["sintesi"])}</p>' if rep.get("sintesi") else "")
-                       + "".join(f"<h3>{e(s['titolo'])}</h3><p>{cite(s['testo'])}</p>" for s in rep.get("sezioni", []))
-                       + (f"<h3>In conclusione</h3><p>{cite(rep['conclusione'])}</p>" if rep.get("conclusione") else "")
-                       + ("<h3>Da monitorare</h3><ul class=keys>" + "".join(f"<li>{cite(m)}</li>" for m in rep["da_monitorare"]) + "</ul>"
-                          if rep.get("da_monitorare") else "")
-                       + ("<details class=refs><summary>Fonti</summary><ol>" + "".join(
-                           f'<li value="{n}"><a href="{e(links[n]["link"])}">{e(links[n]["title"])}</a> <span class=src>{e(links[n]["source"])}</span></li>'
-                           for n in used) + "</ol></details>" if used else "")
-                       + "</section>")
+        report_html = ('<section class=report>'
+                       f'<p class=m>InfoMercati scritto sul tuo Mac dal modello {e(str(rep.get("modello")))} alle {gen:%H:%M}. '
+                       'I numeri in apice portano alla fonte; la versione per i clienti è nel link «InfoMercati».</p>'
+                       + infomercati_html(rep, cite_links=True) + "</section>")
     # l'elenco completo delle notizie compare solo se il report non è disponibile (es. Ollama spento)
     news_html = "" if report_html else (
         "<section><h2>Notizie delle ultime 24 ore</h2><p class=m>Report automatico non disponibile: elenco delle notizie.</p>"
         + ("".join(blocks) or "<p>Nessuna notizia.</p>") + "</section>")
     body = f"""
 <header><div><h1>Brief del mattino</h1><p>{e(when)} · ora di Roma</p></div>
-<div class=noprint><button id=print type=button>Stampa / salva PDF</button> <a href="lettera.html">Lettera ai clienti</a> <a href="index.html">← Dashboard</a></div></header>
+<div class=noprint><button id=print type=button>Stampa / salva PDF</button> <a href="infomercati.html">InfoMercati</a> <a href="index.html">← Dashboard</a></div></header>
 {report_html}
 <section><h2>Quotazioni</h2><p class=m>Valori forniti da TradingView al momento dell'apertura della pagina (possono essere in ritardo; «CFD» = contratto che replica lo strumento).</p>
 {quotes_html}</section>
@@ -969,50 +1064,88 @@ def render_brief(data: dict, cfg: dict, tz: ZoneInfo) -> str:
     return tpl.replace("__CSP__", html.escape(csp, quote=True)).replace("__JS__", js).replace("__BODY__", body)
 
 
-def render_letter(data: dict, tz: ZoneInfo) -> str:
-    """Lettera ai clienti: il report senza riferimenti numerici, con saluto, firma e nota in calce."""
+def infomercati_html(rep: dict, cite_links: bool) -> str:
+    """Corpo dell'articolo. Con cite_links=True i riferimenti [n] diventano link in apice, altrimenti vengono tolti."""
+    e = html.escape
+    links = {f["n"]: f for f in rep.get("fonti", [])}
+
+    def fmt(txt):
+        out = e(txt or "")
+        if not cite_links:
+            return re.sub(r"\s*\[\d+\]", "", out)
+        return re.sub(r"\[(\d+)\]", lambda m: (
+            f'<sup><a class=ref href="{e(links[int(m[1])]["link"])}" title="{e(links[int(m[1])]["source"] + ": " + links[int(m[1])]["title"])}">{m[1]}</a></sup>'
+            if int(m[1]) in links else ""), out)
+
+    def paras(txt):
+        return "".join(f"<p>{fmt(p)}</p>" for p in (txt or "").split("\n\n") if p.strip())
+    parts = [f'<h1 class=im-title>{e(rep.get("titolo") or "InfoMercati")}</h1>']
+    if rep.get("sommario"):
+        parts.append(f"<p class=dek>{fmt(rep['sommario'])}</p>")
+    if rep.get("firma"):
+        parts.append(f'<p class=byline>di {e(rep["firma"])}' + (f' · {e(rep["ruolo"])}' if rep.get("ruolo") else "") + "</p>")
+    ap = rep.get("apertura")
+    if ap:
+        parts.append(f"<h2 class=lead-h>{e(ap['titolo'])}</h2><div class=lead>{paras(ap['testo'])}</div>")
+    if rep.get("numero"):
+        parts.append(f'<aside class=num><div class=num-v>{e(rep["numero"]["valore"])}</div>'
+                     f'<div class=num-l>Il numero del giorno</div><p>{fmt(rep["numero"]["testo"])}</p></aside>')
+    for s in rep.get("approfondimenti", []):
+        parts.append(f"<h2>{e(s['titolo'])}</h2>{paras(s['testo'])}")
+    if rep.get("in_breve"):
+        parts.append("<h2>In breve</h2><ul class=brief>" + "".join(f"<li>{fmt(x)}</li>" for x in rep["in_breve"]) + "</ul>")
+    if rep.get("punto_di_vista"):
+        parts.append(f"<div class=pov><h2>Il mio punto di vista</h2><p>{fmt(rep['punto_di_vista'])}</p></div>")
+    if cite_links:
+        used = sorted({int(x) for x in re.findall(r"\[(\d+)\]", json.dumps(rep, ensure_ascii=False)) if int(x) in links})
+        if used:
+            parts.append("<details class=refs><summary>Fonti</summary><ol>" + "".join(
+                f'<li value="{n}"><a href="{e(links[n]["link"])}">{e(links[n]["title"])}</a> <span class=src>{e(links[n]["source"])}</span></li>'
+                for n in used) + "</ol></details>")
+    return "".join(parts)
+
+
+def _plain_infomercati(rep: dict, when: str) -> str:
+    strip = lambda s: re.sub(r"\s*\[\d+\]", "", s or "").strip()
+    out = ["INFOMERCATI – " + when, "", rep.get("titolo", ""), ""]
+    if rep.get("sommario"):
+        out += [strip(rep["sommario"]), ""]
+    if rep.get("firma"):
+        out += ["di " + rep["firma"] + (" · " + rep["ruolo"] if rep.get("ruolo") else ""), ""]
+    if rep.get("apertura"):
+        out += [rep["apertura"]["titolo"].upper(), strip(rep["apertura"]["testo"]), ""]
+    if rep.get("numero"):
+        out += ["IL NUMERO DEL GIORNO: " + rep["numero"]["valore"], strip(rep["numero"]["testo"]), ""]
+    for s in rep.get("approfondimenti", []):
+        out += [s["titolo"].upper(), strip(s["testo"]), ""]
+    if rep.get("in_breve"):
+        out += ["IN BREVE"] + ["– " + strip(x) for x in rep["in_breve"]] + [""]
+    if rep.get("punto_di_vista"):
+        out += ["IL MIO PUNTO DI VISTA", strip(rep["punto_di_vista"]), ""]
+    return "\n".join(out)
+
+
+def render_infomercati(data: dict, tz: ZoneInfo) -> str:
+    """Pagina InfoMercati per i clienti: articolo senza riferimenti numerici, firma e nota in calce."""
     e = html.escape
     rep = data.get("report") or {}
-    strip = lambda s: re.sub(r"\s*\[\d+(?:\s*[,;]\s*\d+)*\]", "", s or "").strip()
     now = dt.datetime.fromisoformat(rep.get("generated_at") or data["generated_at"]).astimezone(tz)
     mesi = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto",
             "settembre", "ottobre", "novembre", "dicembre"]
     giorni = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"]
     when = f"{giorni[now.weekday()]} {now.day} {mesi[now.month - 1]} {now.year}"
-    ok = rep.get("tipo") == "analisi" and (rep.get("sintesi") or rep.get("sezioni"))
+    ok = rep.get("tipo") == "infomercati"
     links = {f["n"]: f for f in rep.get("fonti", [])}
-    used = sorted({int(x) for txt in [rep.get("sintesi", ""), rep.get("conclusione", "")] + [s["testo"] for s in rep.get("sezioni", [])]
-                   for x in re.findall(r"\[(\d+)\]", txt or "") if int(x) in links})
+    used = sorted({int(x) for x in re.findall(r"\[(\d+)\]", json.dumps(rep, ensure_ascii=False)) if int(x) in links})
     testate = sorted({re.sub(r"\s*[–-].*$", "", links[n]["source"]) for n in used})
-    parts, plain = [], []
-    title = rep.get("titolo") or "Il punto sui mercati"
-    plain += [title, when.capitalize(), ""]
-    if ok:
-        if rep.get("saluto"):
-            parts.append(f"<p class=greet>{e(rep['saluto'])}</p>")
-            plain += [rep["saluto"], ""]
-        if rep.get("sintesi"):
-            parts.append(f"<p class=lead>{e(strip(rep['sintesi']))}</p>")
-            plain += [strip(rep["sintesi"]), ""]
-        for s in rep.get("sezioni", []):
-            parts.append(f"<h2>{e(s['titolo'])}</h2><p>{e(strip(s['testo']))}</p>")
-            plain += [s["titolo"].upper(), strip(s["testo"]), ""]
-        if rep.get("conclusione"):
-            parts.append(f"<p>{e(strip(rep['conclusione']))}</p>")
-            plain += [strip(rep["conclusione"]), ""]
-        sign = "".join(f"<div>{e(x)}</div>" for x in (rep.get("firma"), rep.get("ruolo")) if x)
-        parts.append(f"<div class=sign><p>Un cordiale saluto,</p>{sign}</div>")
-        plain += ["Un cordiale saluto,"] + [x for x in (rep.get("firma"), rep.get("ruolo")) if x] + [""]
-        foot = []
-        if testate:
-            foot.append("Fonti: " + ", ".join(testate) + ".")
-        if rep.get("nota_legale"):
-            foot.append(rep["nota_legale"])
-        if foot:
-            parts.append("<footer>" + "".join(f"<p>{e(x)}</p>" for x in foot) + "</footer>")
-            plain += foot
-    else:
-        parts.append("<p>Il commento di oggi non è ancora disponibile.</p>")
+    body = infomercati_html(rep, cite_links=False) if ok else "<p>InfoMercati di oggi non è ancora disponibile.</p>"
+    foot = []
+    if ok and testate:
+        foot.append("Fonti: " + ", ".join(testate) + ".")
+    if ok and rep.get("nota_legale"):
+        foot.append(rep["nota_legale"])
+    body += ("<footer>" + "".join(f"<p>{e(x)}</p>" for x in foot) + "</footer>") if foot else ""
+    plain = (_plain_infomercati(rep, when) + "\n" + "\n".join(foot)) if ok else ""
     js = """document.getElementById('print').addEventListener('click',function(){window.print();});
 document.getElementById('copy').addEventListener('click',function(){
   var b=this,a=document.querySelector('article'),t=document.getElementById('plain').value;
@@ -1029,39 +1162,53 @@ document.getElementById('copy').addEventListener('click',function(){
 });"""
     csp = "; ".join(["default-src 'none'", f"script-src 'sha256-{sha256_b64(js)}'", "style-src 'unsafe-inline'",
                      "img-src 'self' data:", "base-uri 'none'", "form-action 'none'", "object-src 'none'"])
+    title = rep.get("titolo") or "InfoMercati"
     return f"""<!doctype html>
 <html lang="it"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="{e(csp, quote=True)}">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{e(title)} – {e(when)}</title>
+<title>InfoMercati – {e(when)}</title>
 <style>
-  body {{ margin: 0; background: #eef1f5; color: #1b2230; font: 16px/1.65 Georgia, "Times New Roman", serif; }}
+  body {{ margin: 0; background: #eef1f5; color: #1b2230; font: 17px/1.65 Georgia, "Times New Roman", serif; }}
   .bar {{ position: sticky; top: 0; display: flex; gap: .6rem; justify-content: flex-end; flex-wrap: wrap; padding: .6rem 16px;
-          background: #ffffffe6; border-bottom: 1px solid #dfe3ea; font: 14px system-ui, -apple-system, sans-serif; }}
-  .bar button, .bar a {{ font: inherit; padding: .45rem .9rem; border-radius: 999px; border: 1px solid #2f62e8; background: #fff; color: #2f62e8; cursor: pointer; text-decoration: none; }}
-  .bar button.primary {{ background: #2f62e8; color: #fff; }}
-  article {{ max-width: 720px; margin: 24px auto 40px; background: #fff; padding: 48px 56px; border-radius: 6px; box-shadow: 0 6px 24px -12px rgba(0,0,0,.25); }}
-  .date {{ font: 13px system-ui, -apple-system, sans-serif; color: #6b7585; letter-spacing: .02em; margin: 0; }}
-  h1 {{ font-size: 1.7rem; line-height: 1.25; margin: .3rem 0 1.6rem; font-weight: 600; }}
-  h2 {{ font-size: 1.08rem; margin: 1.6rem 0 .3rem; font-weight: 600; color: #22314f; }}
+          background: #ffffffe6; border-bottom: 1px solid #dfe3ea; font: 14px system-ui, -apple-system, sans-serif; z-index: 2; }}
+  .bar button, .bar a {{ font: inherit; padding: .45rem .9rem; border-radius: 999px; border: 1px solid #1d4ed8; background: #fff; color: #1d4ed8; cursor: pointer; text-decoration: none; }}
+  .bar button.primary {{ background: #1d4ed8; color: #fff; }}
+  article {{ max-width: 720px; margin: 24px auto 40px; background: #fff; padding: 40px 56px 48px; border-radius: 6px; box-shadow: 0 6px 24px -12px rgba(0,0,0,.25); }}
+  .mast {{ display: flex; justify-content: space-between; align-items: baseline; border-bottom: 3px solid #1b2230; padding-bottom: .5rem; margin-bottom: 1.4rem;
+           font: 600 13px/1.2 system-ui, -apple-system, sans-serif; letter-spacing: .04em; text-transform: uppercase; color: #6b7585; }}
+  .mast b {{ font: 800 22px/1 system-ui, -apple-system, sans-serif; letter-spacing: -.01em; text-transform: none; color: #1b2230; }}
+  .mast b span {{ color: #1d4ed8; }}
+  .im-title {{ font-size: 2rem; line-height: 1.18; margin: 0 0 .6rem; font-weight: 700; letter-spacing: -.01em; }}
+  .dek {{ font-size: 1.15rem; line-height: 1.45; color: #3b4558; margin: 0 0 .8rem; font-style: italic; }}
+  .byline {{ font: 13px system-ui, -apple-system, sans-serif; color: #6b7585; margin: 0 0 1.6rem; }}
+  h2 {{ font: 700 1.12rem/1.3 system-ui, -apple-system, sans-serif; margin: 1.8rem 0 .4rem; color: #1b2230; }}
+  h2.lead-h {{ font-size: 1.3rem; margin-top: .4rem; }}
+  .lead p:first-child::first-letter {{ float: left; font-size: 3.1em; line-height: .9; padding: .06em .08em 0 0; font-weight: 700; color: #1d4ed8; }}
   p {{ margin: 0 0 1rem; text-align: justify; hyphens: auto; }}
-  .greet {{ margin-bottom: 1.1rem; }}
-  .lead {{ font-size: 1.04rem; }}
-  .sign {{ margin-top: 2rem; }} .sign p {{ margin-bottom: .3rem; }} .sign div:first-of-type {{ font-weight: 600; }}
-  footer {{ margin-top: 2.4rem; padding-top: .8rem; border-top: 1px solid #e3e6ec; font: 11.5px/1.5 system-ui, -apple-system, sans-serif; color: #6b7585; }}
+  .num {{ float: right; width: 210px; margin: .3rem 0 1rem 1.4rem; padding: .9rem 1rem; background: #f3f6fc; border-left: 4px solid #1d4ed8; border-radius: 4px; }}
+  .num-v {{ font: 800 1.7rem/1.1 system-ui, -apple-system, sans-serif; color: #1d4ed8; }}
+  .num-l {{ font: 600 11px system-ui, -apple-system, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: #6b7585; margin: .2rem 0 .5rem; }}
+  .num p {{ font-size: .9rem; line-height: 1.5; text-align: left; margin: 0; }}
+  ul.brief {{ list-style: none; padding: 0; margin: 0 0 1rem; clear: both; }}
+  ul.brief li {{ padding: .45rem 0 .45rem 1.1rem; border-bottom: 1px solid #eceff4; position: relative; font-size: .97rem; }}
+  ul.brief li::before {{ content: "›"; position: absolute; left: 0; color: #1d4ed8; font-weight: 700; }}
+  .pov {{ clear: both; margin-top: 1.8rem; padding: 1rem 1.2rem .3rem; background: #f8f5ef; border-radius: 6px; }}
+  .pov h2 {{ margin-top: 0; }}
+  footer {{ clear: both; margin-top: 2.2rem; padding-top: .8rem; border-top: 1px solid #e3e6ec; font: 11.5px/1.5 system-ui, -apple-system, sans-serif; color: #6b7585; }}
   footer p {{ text-align: left; margin-bottom: .4rem; }}
-  @page {{ size: A4; margin: 18mm; }}
-  @media print {{ body {{ background: #fff; }} .bar {{ display: none; }} article {{ box-shadow: none; margin: 0; padding: 0; max-width: none; }} }}
-  @media (max-width: 640px) {{ article {{ padding: 28px 20px; margin: 0; border-radius: 0; }} p {{ text-align: left; }} }}
+  @page {{ size: A4; margin: 16mm; }}
+  @media print {{ body {{ background: #fff; font-size: 12pt; }} .bar {{ display: none; }} article {{ box-shadow: none; margin: 0; padding: 0; max-width: none; }} }}
+  @media (max-width: 640px) {{ article {{ padding: 24px 18px; margin: 0; border-radius: 0; }} p {{ text-align: left; }}
+    .num {{ float: none; width: auto; margin: 0 0 1rem; }} .im-title {{ font-size: 1.6rem; }} }}
 </style></head>
 <body>
 <div class=bar><a href="brief.html">← Brief</a><button id=copy type=button>Copia per email</button><button id=print class=primary type=button>Stampa / salva PDF</button></div>
 <article>
-<p class=date>{e(when.capitalize())}</p>
-<h1>{e(title)}</h1>
-{''.join(parts)}
+<div class=mast><b>Info<span>Mercati</span></b><span>{e(when)}</span></div>
+{body}
 </article>
-<textarea id=plain hidden readonly>{e(chr(10).join(plain))}</textarea>
+<textarea id=plain hidden readonly>{e(plain)}</textarea>
 <script>{js}</script>
 </body></html>"""
 
@@ -1146,7 +1293,8 @@ def main() -> int:
     write_atomic(OUT_PATH, render(data, st.get("title", "Cruscotto finanziario")))
     try:
         write_atomic(OUT_PATH.parent / "brief.html", render_brief(data, cfg, tz))
-        write_atomic(OUT_PATH.parent / "lettera.html", render_letter(data, tz))
+        write_atomic(OUT_PATH.parent / "infomercati.html", render_infomercati(data, tz))
+        (OUT_PATH.parent / "lettera.html").unlink(missing_ok=True)
     except Exception:
         traceback.print_exc()
     write_atomic(OUT_PATH.parent / "version.json", json.dumps({"generated_at": data["generated_at"]}))
