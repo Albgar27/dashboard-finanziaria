@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="it"><head><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src &#x27;none&#x27;; script-src &#x27;sha256-wawPCMS92QA9h+FSOCPRV1y2aUP5Vor1R/5hUG1NjlI=&#x27;; style-src &#x27;unsafe-inline&#x27;; img-src &#x27;self&#x27; data:; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;; object-src &#x27;none&#x27;">
+<meta http-equiv="Content-Security-Policy" content="default-src &#x27;none&#x27;; script-src &#x27;sha256-dPtTFnysE44sVgKIrVApC3uowE+pHw0yhsj1cqANawA=&#x27;; style-src &#x27;unsafe-inline&#x27;; connect-src &#x27;self&#x27;; img-src &#x27;self&#x27; data:; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;; object-src &#x27;none&#x27;">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>InfoMercati – mercoledì 21 ottobre 2026</title>
 <style>
@@ -32,61 +32,63 @@
   .pov h2 { margin-top: 0; }
   footer { clear: both; margin-top: 2.2rem; padding-top: .8rem; border-top: 1px solid #e3e6ec; font: 11.5px/1.5 system-ui, -apple-system, sans-serif; color: #6b7585; }
   footer p { text-align: left; margin-bottom: .4rem; }
+  .bar .note { margin-right: auto; align-self: center; color: #6b7585; font-size: 12.5px; }
+  .bar button[hidden] { display: none; }
+  .msg { max-width: 720px; margin: 12px auto 0; padding: .55rem .9rem; background: #fff7dc; border: 1px solid #f1d98e; border-radius: 8px; font: 13.5px system-ui, -apple-system, sans-serif; color: #5d4500; }
+  .msg[hidden] { display: none; }
+  body.editing #im-body { outline: 2px dashed #1d4ed8; outline-offset: 10px; border-radius: 2px; }
+  body.editing #im-body:focus { outline-color: #f59e0b; }
   @page { size: A4; margin: 16mm; }
-  @media print { body { background: #fff; font-size: 12pt; } .bar { display: none; } article { box-shadow: none; margin: 0; padding: 0; max-width: none; } }
+  @media print { body { background: #fff; font-size: 12pt; } .bar, .msg { display: none; } article { box-shadow: none; margin: 0; padding: 0; max-width: none; } }
   @media (max-width: 640px) { article { padding: 24px 18px; margin: 0; border-radius: 0; } p { text-align: left; }
     .num { float: none; width: auto; margin: 0 0 1rem; } .im-title { font-size: 1.6rem; } }
 </style></head>
 <body>
-<div class=bar><a href="brief.html">← Brief</a><button id=copy type=button>Copia per email</button><button id=print class=primary type=button>Stampa / salva PDF</button></div>
+<div class=bar><a href="brief.html">← Brief</a><span class=note></span>
+<button id=edit type=button>Modifica</button><button id=save class=primary type=button hidden>Salva</button><button id=cancel type=button hidden>Annulla</button>
+
+<button id=copy type=button>Copia per email</button><button id=print class=primary type=button>Stampa / salva PDF</button></div>
+<p id=msg class=msg hidden></p>
 <article>
 <div class=mast><b>Info<span>Mercati</span></b><span>mercoledì 21 ottobre 2026</span></div>
-<h1 class=im-title>Banche, pensioni e inflazione: cosa cambia per i vostri risparmi</h1><p class=dek>Nuove tasse per le banche, ritardi previdenziali e inflazione persistente nel Regno Unito: ecco cosa significa per i vostri investimenti e il futuro della pensione.</p><p class=byline>di Alberto Garau · Consulente finanziario</p><h2 class=lead-h>Banche: altri 5 miliardi di &#x27;extra profitti&#x27; in arrivo</h2><div class=lead><p>La legge di Bilancio in preparazione prevede che banche e assicurazioni versino altri 5 miliardi di euro allo Stato. Questo, nonostante l&#x27;accordo triennale siglato nel 2025 con il governo, che prevedeva un diverso meccanismo di redistribuzione degli utili.</p><p>Questo significa che gli istituti di credito, già con utili significativi (si parla di 50 miliardi complessivi), dovranno destinare una quota maggiore dei loro profitti al fisco. La questione è delicata perché l&#x27;accordo precedente aveva creato aspettative di stabilità e prevedibilità per gli investitori e per le famiglie che hanno i propri risparmi investiti in questi istituti. Un cambiamento repentino può generare incertezza e, potenzialmente, influire sui rendimenti futuri.</p><p>Per chi possiede azioni bancarie o investimenti legati al settore, è importante valutare l&#x27;impatto di questa nuova misura sulla redditività delle banche. Anche per chi ha risparmi parcheggiati in prodotti finanziari collegati al settore bancario, è utile monitorare l&#x27;evoluzione della situazione, perché un&#x27;imposizione fiscale più alta potrebbe ridurre i dividendi o i rendimenti distribuiti.</p></div><aside class=num><div class=num-v>3,5%</div><div class=num-l>Il numero del giorno</div><p>Questo è il tasso di inflazione nel Regno Unito a settembre. Un aumento del 3,5% significa che i prezzi dei beni e servizi stanno salendo più velocemente del previsto, erodendo il potere d&#x27;acquisto dei risparmi.</p></aside><h2>La pensione si allontana: cosa cambia davvero dal 2027</h2><p>Se avevate in mente di andare in pensione nel 2027, preparatevi a rimandare o ad accettare un assegno più basso. Il governo ha pubblicato il decreto che modifica i coefficienti di trasformazione, i numeri che servono per calcolare quanto incassare ogni mese. A 67 anni, questo coefficiente scenderà a 5,514, il che significa che, a parità di età di uscita, la pensione sarà inferiore. Questo cambiamento, unito all&#x27;adeguamento dell&#x27;età pensionabile in base alla speranza di vita, fa sì che rinviare la pensione possa portare a un aumento dell’assegno, ma anche che lavorare più a lungo diventi una necessità per mantenere lo stesso tenore di vita.</p><h2>In breve</h2><ul class=brief><li>Secondo il CEO di Eni, Descalzi, il tetto ai prezzi dei carburanti è paragonabile alla Tachipirina, e il costo del petrolio è aumentato di 20-30 dollari a barile a causa dei maggiori costi di trasporto, aggravato dalla limitata capacità di raffinazione europea.</li><li>Stellantis ha rassicurato la Regione Lazio riguardo al futuro dello stabilimento di Cassino, ma il governatore Rocca chiede azioni concrete dall&#x27;Unione Europea.</li><li>In seguito ai disordini a Milano, si discute di chi debba farsi carico dei danni ai negozi e ai beni pubblici, con la possibilità che le famiglie dei vandali, anche minorenni, siano chiamate a risarcire.</li><li>Partiti popolari europei, socialisti e liberali hanno raggiunto un accordo sull&#x27;Industrial Accelerator Act, introducendo maggiore flessibilità nelle norme pur mantenendo gli obiettivi.</li></ul><div class=pov><h2>Il mio punto di vista</h2><p>Come consulente finanziario, osservo con attenzione l&#x27;impatto delle decisioni politiche sui vostri risparmi. La legge di Bilancio in preparazione impone alle banche di versare altri 5 miliardi di euro allo Stato, riducendo potenzialmente i dividendi o i rendimenti per chi investe in quel settore. Allo stesso tempo, il decreto che modifica i coefficienti di trasformazione pensionistici rende più difficile raggiungere la pensione nel 2027, richiedendo un rinvio o un assegno più basso. L&#x27;inflazione nel Regno Unito al 3,5% aggrava la situazione, erodendo il potere d&#x27;acquisto dei vostri risparmi. Questi cambiamenti richiedono una valutazione attenta delle vostre strategie di investimento e pianificazione pensionistica.</p></div><footer><p>Fonti: ANSA Economia, Corriere Economia.</p><p>Questo commento ha finalità esclusivamente informative e non costituisce raccomandazione personalizzata né sollecitazione all&#x27;investimento. Le informazioni provengono da fonti pubbliche ritenute attendibili.</p></footer>
+<div id=im-body data-gen="2026-10-21T08:53:43+00:00"><h1 class=im-title>Banche, pensioni: la Legge di Bilancio ridisegna risparmi e futuro</h1><p class=dek>Profitti bancari sotto pressione fiscale e una penalizzazione tecnica per i pensionati: due fronti che impattano direttamente sui risparmi e richiedono una revisione delle strategie finanziarie.</p><p class=byline>di Alberto Garau · Consulente finanziario</p><h2 class=lead-h>Banche: Extra Profitti e la Legge di Bilancio</h2><div class=lead><p>I profitti delle banche italiane, già ampiamente discussi, continuano a generare un dibattito acceso, con implicazioni dirette per i conti delle famiglie e degli investitori. Si parla di 50 miliardi di utili complessivi degli istituti, una cifra che alimenta la discussione sulla loro equa distribuzione e sul ruolo dello Stato. Eppure, nonostante un accordo triennale del 2025 con il governo che prevedeva limiti alla tassazione degli extra profitti, la nuova Legge di Bilancio prevede ulteriori 5 miliardi da prelevare da banche e assicurazioni.</p><p>La questione non è astratta: significa che, a fronte di utili già consistenti, le banche dovranno destinare una quota aggiuntiva al fisco, riducendo potenzialmente la loro capacità di reinvestimento o di distribuzione di dividendi. Questo, a sua volta, può impattare negativamente sui rendimenti degli investimenti in azioni bancarie o in strumenti finanziari legati alla performance degli istituti.</p><p>Cosa significa per chi ha risparmi? In primo luogo, è necessario valutare attentamente l&#x27;esposizione al settore bancario, considerando che l&#x27;incertezza normativa potrebbe continuare a pesare sui titoli. In secondo luogo, l&#x27;impatto sui dividendi potrebbe richiedere una revisione delle aspettative di rendimento. Infine, la situazione evidenzia l&#x27;importanza di una pianificazione finanziaria flessibile, in grado di adattarsi a cambiamenti improvvisi del contesto normativo e fiscale.</p></div><aside class=num><div class=num-v>3,5%</div><div class=num-l>Il numero del giorno</div><p>È l&#x27;inflazione nel Regno Unito a settembre. Supera le attese, segnalando che la pressione sui prezzi, nonostante le misure adottate, persiste e potrebbe richiedere ulteriori interventi.</p></aside><h2>Il pensionamento si allontana: un dettaglio tecnico, un impatto reale</h2><p>Il decreto del Ministero del Lavoro, pubblicato ieri, introduce una modifica apparentemente tecnica, ma che incide concretamente sui pensionati. A partire dal 2027, il coefficiente di trasformazione, ovvero il moltiplicatore applicato ai contributi versati per calcolare l&#x27;assegno pensionistico, scenderà a 5,514 per chi andrà in pensione a 67 anni. Questo significa che a parità di età di uscita e anni di contributi, la pensione sarà inferiore rispetto a quanto percepito oggi. Non si tratta di una questione astratta: si tratta di ridurre il potere d&#x27;acquisto di chi, dopo decenni di lavoro, si prepara a godere dei propri risparmi. La conseguenza diretta è che, per mantenere lo stesso livello di rendita, si dovrà lavorare più a lungo o accettare un assegno più basso; la pianificazione finanziaria a lungo termine deve tenerne conto con precisione.</p><h2>In breve</h2><ul class=brief><li>Il CEO di Eni paragona il tetto ai prezzi dei carburanti alla Tachipirina, evidenziando come non risolva il problema di fondo: il costo del petrolio è aumentato di 20-30 dollari a barile a causa dei noli, e l&#x27;Europa fatica a raffinare il greggio.</li><li>Stellantis rassicura il Lazio sulla fabbrica di Cassino, ma il governatore Rocca chiede alla Ue azioni concrete per il futuro industriale del sito.</li><li>I danni causati dai disordini a Milano, come negozi saccheggiati e panchine distrutte, sollevano interrogativi sulla copertura assicurativa e sulla responsabilità dei vandali, anche minorenni, con possibili richieste di risarcimento alle famiglie.</li><li>Un accordo tra Ppe, socialisti e liberali ha introdotto maggiore flessibilità nell&#x27;Industrial Accelerator Act, mantenendo comunque gli obiettivi prefissati.</li></ul><div class=pov><h2>Il mio punto di vista</h2><p>I 50 miliardi di utili bancari, discussi a lungo, ora si traducono in 5 miliardi aggiuntivi destinati al fisco, una misura che potrebbe comprimere la capacità di reinvestimento delle banche e, potenzialmente, ridurre i dividendi. Questo scenario richiede una valutazione attenta dell&#x27;esposizione al settore bancario, soprattutto per chi investe in azioni o strumenti legati alla performance degli istituti. Parallelamente, la modifica del coefficiente di trasformazione per i pensionati, che riduce l&#x27;assegno a parità di età e contributi, sottolinea l&#x27;urgenza di una pianificazione finanziaria a lungo termine più accurata e flessibile, considerando che lavorare più a lungo o accettare una pensione inferiore diventano opzioni concrete.</p></div></div><footer><p>Fonti: ANSA Economia, Corriere Economia.</p><p>Questo commento ha finalità esclusivamente informative e non costituisce raccomandazione personalizzata né sollecitazione all&#x27;investimento. Le informazioni provengono da fonti pubbliche ritenute attendibili.</p></footer>
 </article>
-<textarea id=plain hidden readonly>INFOMERCATI – mercoledì 21 ottobre 2026
-
-Banche, pensioni e inflazione: cosa cambia per i vostri risparmi
-
-Nuove tasse per le banche, ritardi previdenziali e inflazione persistente nel Regno Unito: ecco cosa significa per i vostri investimenti e il futuro della pensione.
-
-di Alberto Garau · Consulente finanziario
-
-BANCHE: ALTRI 5 MILIARDI DI &#x27;EXTRA PROFITTI&#x27; IN ARRIVO
-La legge di Bilancio in preparazione prevede che banche e assicurazioni versino altri 5 miliardi di euro allo Stato. Questo, nonostante l&#x27;accordo triennale siglato nel 2025 con il governo, che prevedeva un diverso meccanismo di redistribuzione degli utili.
-
-Questo significa che gli istituti di credito, già con utili significativi (si parla di 50 miliardi complessivi), dovranno destinare una quota maggiore dei loro profitti al fisco. La questione è delicata perché l&#x27;accordo precedente aveva creato aspettative di stabilità e prevedibilità per gli investitori e per le famiglie che hanno i propri risparmi investiti in questi istituti. Un cambiamento repentino può generare incertezza e, potenzialmente, influire sui rendimenti futuri.
-
-Per chi possiede azioni bancarie o investimenti legati al settore, è importante valutare l&#x27;impatto di questa nuova misura sulla redditività delle banche. Anche per chi ha risparmi parcheggiati in prodotti finanziari collegati al settore bancario, è utile monitorare l&#x27;evoluzione della situazione, perché un&#x27;imposizione fiscale più alta potrebbe ridurre i dividendi o i rendimenti distribuiti.
-
-IL NUMERO DEL GIORNO: 3,5%
-Questo è il tasso di inflazione nel Regno Unito a settembre. Un aumento del 3,5% significa che i prezzi dei beni e servizi stanno salendo più velocemente del previsto, erodendo il potere d&#x27;acquisto dei risparmi.
-
-LA PENSIONE SI ALLONTANA: COSA CAMBIA DAVVERO DAL 2027
-Se avevate in mente di andare in pensione nel 2027, preparatevi a rimandare o ad accettare un assegno più basso. Il governo ha pubblicato il decreto che modifica i coefficienti di trasformazione, i numeri che servono per calcolare quanto incassare ogni mese. A 67 anni, questo coefficiente scenderà a 5,514, il che significa che, a parità di età di uscita, la pensione sarà inferiore. Questo cambiamento, unito all&#x27;adeguamento dell&#x27;età pensionabile in base alla speranza di vita, fa sì che rinviare la pensione possa portare a un aumento dell’assegno, ma anche che lavorare più a lungo diventi una necessità per mantenere lo stesso tenore di vita.
-
-IN BREVE
-– Secondo il CEO di Eni, Descalzi, il tetto ai prezzi dei carburanti è paragonabile alla Tachipirina, e il costo del petrolio è aumentato di 20-30 dollari a barile a causa dei maggiori costi di trasporto, aggravato dalla limitata capacità di raffinazione europea.
-– Stellantis ha rassicurato la Regione Lazio riguardo al futuro dello stabilimento di Cassino, ma il governatore Rocca chiede azioni concrete dall&#x27;Unione Europea.
-– In seguito ai disordini a Milano, si discute di chi debba farsi carico dei danni ai negozi e ai beni pubblici, con la possibilità che le famiglie dei vandali, anche minorenni, siano chiamate a risarcire.
-– Partiti popolari europei, socialisti e liberali hanno raggiunto un accordo sull&#x27;Industrial Accelerator Act, introducendo maggiore flessibilità nelle norme pur mantenendo gli obiettivi.
-
-IL MIO PUNTO DI VISTA
-Come consulente finanziario, osservo con attenzione l&#x27;impatto delle decisioni politiche sui vostri risparmi. La legge di Bilancio in preparazione impone alle banche di versare altri 5 miliardi di euro allo Stato, riducendo potenzialmente i dividendi o i rendimenti per chi investe in quel settore. Allo stesso tempo, il decreto che modifica i coefficienti di trasformazione pensionistici rende più difficile raggiungere la pensione nel 2027, richiedendo un rinvio o un assegno più basso. L&#x27;inflazione nel Regno Unito al 3,5% aggrava la situazione, erodendo il potere d&#x27;acquisto dei vostri risparmi. Questi cambiamenti richiedono una valutazione attenta delle vostre strategie di investimento e pianificazione pensionistica.
-
-Fonti: ANSA Economia, Corriere Economia.
-Questo commento ha finalità esclusivamente informative e non costituisce raccomandazione personalizzata né sollecitazione all&#x27;investimento. Le informazioni provengono da fonti pubbliche ritenute attendibili.</textarea>
-<script>document.getElementById('print').addEventListener('click',function(){window.print();});
+<script>(function(){
+var body=document.getElementById('im-body'),art=document.querySelector('article'),bar=document.querySelector('.bar');
+var local=location.protocol==='http:'&&/^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+var bEdit=document.getElementById('edit'),bSave=document.getElementById('save'),bCancel=document.getElementById('cancel'),
+    bReset=document.getElementById('reset'),msg=document.getElementById('msg');
+var original=body.innerHTML;
+function say(s){msg.textContent=s;msg.hidden=!s;}
+function editing(on){body.contentEditable=on?'true':'false';document.body.classList.toggle('editing',on);
+  bEdit.hidden=on;bSave.hidden=!on;bCancel.hidden=!on;if(on){body.focus();}}
+bEdit.addEventListener('click',function(){editing(true);
+  say(local?'Modifica il testo direttamente. Cmd+B grassetto, Cmd+I corsivo. Poi Salva.':
+    'Stai modificando solo questa copia (per copiarla o stamparla): per salvarla apri InfoMercati dal Mac.');});
+bCancel.addEventListener('click',function(){body.innerHTML=original;editing(false);say('');});
+bSave.addEventListener('click',function(){
+  if(!local){editing(false);say('Modifiche tenute in questa pagina: ora puoi copiarla o stamparla.');return;}
+  bSave.disabled=true;say('Salvataggio e pubblicazione in corso…');
+  fetch('/api/salva-infomercati',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({generated_at:body.getAttribute('data-gen'),html:body.innerHTML})})
+  .then(function(r){return r.json();}).then(function(res){bSave.disabled=false;
+    if(res.ok){original=body.innerHTML;editing(false);location.reload();}else{say('Non salvato: '+(res.errore||'errore'));}})
+  .catch(function(){bSave.disabled=false;say('Il servizio del Mac non risponde.');});});
+if(bReset){bReset.addEventListener('click',function(){
+  if(!confirm('Tornare al testo originale generato in automatico?'))return;
+  fetch('/api/ripristina-infomercati',{method:'POST'}).then(function(r){return r.json();})
+  .then(function(res){if(res.ok)location.reload();else say('Non riuscito: '+(res.errore||'errore'));});});}
+if(!local&&bReset)bReset.hidden=true;
+document.getElementById('print').addEventListener('click',function(){window.print();});
 document.getElementById('copy').addEventListener('click',function(){
-  var b=this,a=document.querySelector('article'),t=document.getElementById('plain').value;
-  function say(s){b.textContent=s;setTimeout(function(){b.textContent='Copia per email';},2500);}
-  function bySelection(){
-    var r=document.createRange();r.selectNodeContents(a);var s=window.getSelection();s.removeAllRanges();s.addRange(r);
-    var ok=false;try{ok=document.execCommand('copy');}catch(e){}
-    if(ok){s.removeAllRanges();say('Copiato!');}else{say('Testo selezionato: premi Cmd+C');}
-  }
+  var b=this;function ok(s){b.textContent=s;setTimeout(function(){b.textContent='Copia per email';},2500);}
+  var t=art.innerText;
+  function bySelection(){var r=document.createRange();r.selectNodeContents(art);var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+    var done=false;try{done=document.execCommand('copy');}catch(e){}
+    if(done){s.removeAllRanges();ok('Copiato!');}else{ok('Testo selezionato: premi Cmd+C');}}
   if(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){
-    navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([a.innerHTML],{type:'text/html'}),
-      'text/plain':new Blob([t],{type:'text/plain'})})]).then(function(){say('Copiato!');},bySelection);
-  }else{bySelection();}
-});</script>
+    navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([art.innerHTML],{type:'text/html'}),
+      'text/plain':new Blob([t],{type:'text/plain'})})]).then(function(){ok('Copiato!');},bySelection);
+  }else{bySelection();}});
+})();</script>
 </body></html>

@@ -17,7 +17,8 @@ nessun servizio a pagamento.
 | `assets/` | Modello HTML, CSS e JavaScript che lo script inserisce nella pagina |
 | `docs/index.html` | La pagina generata (si apre anche con doppio clic) |
 | `aggiorna.sh` | Genera la pagina e la pubblica su GitHub Pages (usato dai servizi automatici del Mac) |
-| `serve.py` | Server locale della pagina, con il comando del pulsante «Aggiorna» |
+| `serve.py` | Server locale della pagina, con i comandi «Aggiorna» notizie e «Salva» di InfoMercati |
+| `stile_alberto.md` | Il tuo stile di scrittura, usato per InfoMercati |
 | `requirements.txt` | Dipendenze Python (`feedparser`, `requests`, `PyYAML`) |
 
 ## Da dove arrivano i dati
@@ -116,6 +117,16 @@ riprendono, fonti istituzionali); lo script scarta frasi con numeri o nomi non p
 e ripetizioni. Senza riferimenti numerici, con fonti e nota legale in calce. «Copia per email» copia il testo
 formattato; «Stampa / salva PDF» crea il PDF. Firma, ruolo e nota legale in `report:` dentro `config.yaml`.
 Il testo è generato in automatico: rileggilo sempre prima di inviarlo.
+
+**Il tuo stile** – `stile_alberto.md` descrive come scrivi (ricavato dalla tesi): il modello lo segue per ogni
+pezzo di InfoMercati. Modificalo liberamente, vale dal prossimo aggiornamento. Gli esempi nel file sono solo di forma.
+
+**Modifica di InfoMercati** – sulla versione del Mac (http://127.0.0.1:8799/infomercati.html) premi «Modifica»,
+correggi il testo direttamente nella pagina (Cmd+B grassetto, Cmd+I corsivo) e premi «Salva»: la versione
+modificata viene salvata in `modifiche/infomercati.json`, ripulita da qualsiasi codice, e pubblicata online.
+Per tutto il giorno gli aggiornamenti automatici non la sostituiscono (il giorno dopo arriva il nuovo numero);
+«Ripristina originale» torna al testo generato. Sulla versione online «Modifica» vale solo per la copia aperta
+(per copiarla o stamparla), senza salvare.
 
 **Pulsante «Aggiorna» delle notizie** – sulla versione del Mac (http://127.0.0.1:8799) scarica subito le notizie,
 rigenera e pubblica la pagina, poi la ricarica (meno di un minuto; qualche minuto se va rifatto il report del

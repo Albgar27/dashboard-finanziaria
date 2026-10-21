@@ -793,6 +793,12 @@ def build_report(cfg: dict, news: list, markets: list, now: dt.datetime, status:
                + ("è mattina, le notizie di ieri sono di ieri e non scrivere che la giornata si è chiusa." if fase == "mattina"
                   else "puoi parlare della giornata di oggi."))
     style = STYLE.replace("__FIRMA__", rc.get("firma") or "un consulente").replace("__MOMENTO__", momento)
+    try:
+        stile = (ROOT / rc.get("stile_file", "stile_alberto.md")).read_text(encoding="utf-8")
+        stile = re.sub(r"^#.*$", "", stile, flags=re.M).strip()
+        style += "\n\nSTILE PERSONALE DA SEGUIRE (sono indicazioni di forma, gli esempi non sono fatti):\n" + stile
+    except OSError:
+        pass
     name = f"Report – Ollama {rc.get('modello')}"
     t0 = time.monotonic()
     dropped = 0
@@ -1125,6 +1131,66 @@ def _plain_infomercati(rep: dict, when: str) -> str:
     return "\n".join(out)
 
 
+EDITS_PATH = ROOT / "modifiche" / "infomercati.json"
+ALLOWED_TAGS = {"p", "h1", "h2", "h3", "ul", "ol", "li", "strong", "b", "em", "i", "u", "br", "aside", "div", "span"}
+ALLOWED_CLASSES = {"im-title", "dek", "byline", "lead-h", "lead", "num", "num-v", "num-l", "brief", "pov"}
+
+
+def sanitize_article(raw: str) -> str:
+    """Tiene solo testo e tag di formattazione semplici (niente script, link, stili o attributi)."""
+    from html.parser import HTMLParser
+
+    class S(HTMLParser):
+        def __init__(self):
+            super().__init__(convert_charrefs=True)
+            self.out, self.skip, self.stack = [], 0, []
+
+        def handle_starttag(self, tag, attrs):
+            if tag in ("script", "style", "iframe", "object", "svg", "math", "template"):
+                self.skip += 1
+                return
+            if self.skip or tag not in ALLOWED_TAGS:
+                return
+            if tag == "br":
+                self.out.append("<br>")
+                return
+            cls = " ".join(c for c in (dict(attrs).get("class") or "").split() if c in ALLOWED_CLASSES)
+            self.out.append(f'<{tag} class="{cls}">' if cls else f"<{tag}>")
+            self.stack.append(tag)
+
+        def handle_endtag(self, tag):
+            if tag in ("script", "style", "iframe", "object", "svg", "math", "template"):
+                self.skip = max(0, self.skip - 1)
+                return
+            if self.skip or tag not in ALLOWED_TAGS or tag == "br" or tag not in self.stack:
+                return
+            while self.stack:
+                t = self.stack.pop()
+                self.out.append(f"</{t}>")
+                if t == tag:
+                    break
+
+        def handle_data(self, data):
+            if not self.skip:
+                self.out.append(html.escape(data, quote=False))
+    s = S()
+    s.feed(raw or "")
+    s.close()
+    s.out += [f"</{t}>" for t in reversed(s.stack)]
+    return "".join(s.out)
+
+
+def load_edits(rep: dict) -> dict | None:
+    """Modifiche salvate a mano per questo InfoMercati (stesso generated_at), già ripulite."""
+    try:
+        ed = json.loads(EDITS_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not rep or ed.get("generated_at") != rep.get("generated_at") or not ed.get("html"):
+        return None
+    return {"html": sanitize_article(ed["html"]), "saved_at": ed.get("saved_at")}
+
+
 def render_infomercati(data: dict, tz: ZoneInfo) -> str:
     """Pagina InfoMercati per i clienti: articolo senza riferimenti numerici, firma e nota in calce."""
     e = html.escape
@@ -1138,7 +1204,9 @@ def render_infomercati(data: dict, tz: ZoneInfo) -> str:
     links = {f["n"]: f for f in rep.get("fonti", [])}
     used = sorted({int(x) for x in re.findall(r"\[(\d+)\]", json.dumps(rep, ensure_ascii=False)) if int(x) in links})
     testate = sorted({re.sub(r"\s*[–-].*$", "", links[n]["source"]) for n in used})
-    body = infomercati_html(rep, cite_links=False) if ok else "<p>InfoMercati di oggi non è ancora disponibile.</p>"
+    edits = load_edits(rep) if ok else None
+    body = (edits["html"] if edits else infomercati_html(rep, cite_links=False)) if ok else "<p>InfoMercati di oggi non è ancora disponibile.</p>"
+    body = f'<div id=im-body data-gen="{e(rep.get("generated_at", ""))}">{body}</div>'
     foot = []
     if ok and testate:
         foot.append("Fonti: " + ", ".join(testate) + ".")
@@ -1146,22 +1214,52 @@ def render_infomercati(data: dict, tz: ZoneInfo) -> str:
         foot.append(rep["nota_legale"])
     body += ("<footer>" + "".join(f"<p>{e(x)}</p>" for x in foot) + "</footer>") if foot else ""
     plain = (_plain_infomercati(rep, when) + "\n" + "\n".join(foot)) if ok else ""
-    js = """document.getElementById('print').addEventListener('click',function(){window.print();});
+    saved_note = ""
+    if edits and edits.get("saved_at"):
+        try:
+            saved_note = "Modificato da te il " + dt.datetime.fromisoformat(edits["saved_at"]).astimezone(tz).strftime("%d/%m alle %H:%M")
+        except ValueError:
+            saved_note = "Modificato da te"
+    js = """(function(){
+var body=document.getElementById('im-body'),art=document.querySelector('article'),bar=document.querySelector('.bar');
+var local=location.protocol==='http:'&&/^(127\\.0\\.0\\.1|localhost)$/.test(location.hostname);
+var bEdit=document.getElementById('edit'),bSave=document.getElementById('save'),bCancel=document.getElementById('cancel'),
+    bReset=document.getElementById('reset'),msg=document.getElementById('msg');
+var original=body.innerHTML;
+function say(s){msg.textContent=s;msg.hidden=!s;}
+function editing(on){body.contentEditable=on?'true':'false';document.body.classList.toggle('editing',on);
+  bEdit.hidden=on;bSave.hidden=!on;bCancel.hidden=!on;if(on){body.focus();}}
+bEdit.addEventListener('click',function(){editing(true);
+  say(local?'Modifica il testo direttamente. Cmd+B grassetto, Cmd+I corsivo. Poi Salva.':
+    'Stai modificando solo questa copia (per copiarla o stamparla): per salvarla apri InfoMercati dal Mac.');});
+bCancel.addEventListener('click',function(){body.innerHTML=original;editing(false);say('');});
+bSave.addEventListener('click',function(){
+  if(!local){editing(false);say('Modifiche tenute in questa pagina: ora puoi copiarla o stamparla.');return;}
+  bSave.disabled=true;say('Salvataggio e pubblicazione in corso…');
+  fetch('/api/salva-infomercati',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({generated_at:body.getAttribute('data-gen'),html:body.innerHTML})})
+  .then(function(r){return r.json();}).then(function(res){bSave.disabled=false;
+    if(res.ok){original=body.innerHTML;editing(false);location.reload();}else{say('Non salvato: '+(res.errore||'errore'));}})
+  .catch(function(){bSave.disabled=false;say('Il servizio del Mac non risponde.');});});
+if(bReset){bReset.addEventListener('click',function(){
+  if(!confirm('Tornare al testo originale generato in automatico?'))return;
+  fetch('/api/ripristina-infomercati',{method:'POST'}).then(function(r){return r.json();})
+  .then(function(res){if(res.ok)location.reload();else say('Non riuscito: '+(res.errore||'errore'));});});}
+if(!local&&bReset)bReset.hidden=true;
+document.getElementById('print').addEventListener('click',function(){window.print();});
 document.getElementById('copy').addEventListener('click',function(){
-  var b=this,a=document.querySelector('article'),t=document.getElementById('plain').value;
-  function say(s){b.textContent=s;setTimeout(function(){b.textContent='Copia per email';},2500);}
-  function bySelection(){
-    var r=document.createRange();r.selectNodeContents(a);var s=window.getSelection();s.removeAllRanges();s.addRange(r);
-    var ok=false;try{ok=document.execCommand('copy');}catch(e){}
-    if(ok){s.removeAllRanges();say('Copiato!');}else{say('Testo selezionato: premi Cmd+C');}
-  }
+  var b=this;function ok(s){b.textContent=s;setTimeout(function(){b.textContent='Copia per email';},2500);}
+  var t=art.innerText;
+  function bySelection(){var r=document.createRange();r.selectNodeContents(art);var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+    var done=false;try{done=document.execCommand('copy');}catch(e){}
+    if(done){s.removeAllRanges();ok('Copiato!');}else{ok('Testo selezionato: premi Cmd+C');}}
   if(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){
-    navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([a.innerHTML],{type:'text/html'}),
-      'text/plain':new Blob([t],{type:'text/plain'})})]).then(function(){say('Copiato!');},bySelection);
-  }else{bySelection();}
-});"""
+    navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([art.innerHTML],{type:'text/html'}),
+      'text/plain':new Blob([t],{type:'text/plain'})})]).then(function(){ok('Copiato!');},bySelection);
+  }else{bySelection();}});
+})();"""
     csp = "; ".join(["default-src 'none'", f"script-src 'sha256-{sha256_b64(js)}'", "style-src 'unsafe-inline'",
-                     "img-src 'self' data:", "base-uri 'none'", "form-action 'none'", "object-src 'none'"])
+                     "connect-src 'self'", "img-src 'self' data:", "base-uri 'none'", "form-action 'none'", "object-src 'none'"])
     title = rep.get("titolo") or "InfoMercati"
     return f"""<!doctype html>
 <html lang="it"><head><meta charset="utf-8">
@@ -1197,18 +1295,27 @@ document.getElementById('copy').addEventListener('click',function(){
   .pov h2 {{ margin-top: 0; }}
   footer {{ clear: both; margin-top: 2.2rem; padding-top: .8rem; border-top: 1px solid #e3e6ec; font: 11.5px/1.5 system-ui, -apple-system, sans-serif; color: #6b7585; }}
   footer p {{ text-align: left; margin-bottom: .4rem; }}
+  .bar .note {{ margin-right: auto; align-self: center; color: #6b7585; font-size: 12.5px; }}
+  .bar button[hidden] {{ display: none; }}
+  .msg {{ max-width: 720px; margin: 12px auto 0; padding: .55rem .9rem; background: #fff7dc; border: 1px solid #f1d98e; border-radius: 8px; font: 13.5px system-ui, -apple-system, sans-serif; color: #5d4500; }}
+  .msg[hidden] {{ display: none; }}
+  body.editing #im-body {{ outline: 2px dashed #1d4ed8; outline-offset: 10px; border-radius: 2px; }}
+  body.editing #im-body:focus {{ outline-color: #f59e0b; }}
   @page {{ size: A4; margin: 16mm; }}
-  @media print {{ body {{ background: #fff; font-size: 12pt; }} .bar {{ display: none; }} article {{ box-shadow: none; margin: 0; padding: 0; max-width: none; }} }}
+  @media print {{ body {{ background: #fff; font-size: 12pt; }} .bar, .msg {{ display: none; }} article {{ box-shadow: none; margin: 0; padding: 0; max-width: none; }} }}
   @media (max-width: 640px) {{ article {{ padding: 24px 18px; margin: 0; border-radius: 0; }} p {{ text-align: left; }}
     .num {{ float: none; width: auto; margin: 0 0 1rem; }} .im-title {{ font-size: 1.6rem; }} }}
 </style></head>
 <body>
-<div class=bar><a href="brief.html">← Brief</a><button id=copy type=button>Copia per email</button><button id=print class=primary type=button>Stampa / salva PDF</button></div>
+<div class=bar><a href="brief.html">← Brief</a><span class=note>{e(saved_note)}</span>
+<button id=edit type=button>Modifica</button><button id=save class=primary type=button hidden>Salva</button><button id=cancel type=button hidden>Annulla</button>
+{'<button id=reset type=button>Ripristina originale</button>' if edits else ''}
+<button id=copy type=button>Copia per email</button><button id=print class=primary type=button>Stampa / salva PDF</button></div>
+<p id=msg class=msg hidden></p>
 <article>
 <div class=mast><b>Info<span>Mercati</span></b><span>{e(when)}</span></div>
 {body}
 </article>
-<textarea id=plain hidden readonly>{e(plain)}</textarea>
 <script>{js}</script>
 </body></html>"""
 
@@ -1220,6 +1327,18 @@ def write_atomic(path: Path, text: str) -> None:
 
 
 def main() -> int:
+    if "--solo-pagine" in sys.argv:
+        # rigenera solo le pagine (es. dopo una modifica di InfoMercati), senza scaricare nulla
+        cfg = yaml.safe_load(CONFIG_PATH.read_text(encoding="utf-8"))
+        tz = ZoneInfo(cfg["settings"].get("timezone", "Europe/Rome"))
+        data = load_previous()
+        if not data:
+            print("Nessuna pagina precedente da rigenerare.", file=sys.stderr)
+            return 1
+        write_atomic(OUT_PATH.parent / "infomercati.html", render_infomercati(data, tz))
+        write_atomic(OUT_PATH.parent / "brief.html", render_brief(data, cfg, tz))
+        print("Pagine InfoMercati e Brief rigenerate.")
+        return 0
     news_only = "--solo-notizie" in sys.argv
     cfg = yaml.safe_load(CONFIG_PATH.read_text(encoding="utf-8"))
     st = cfg["settings"]
@@ -1262,7 +1381,10 @@ def main() -> int:
     report = revalidate_report(prev.get("report"))
     every = (cfg.get("report") or {}).get("rigenera_ogni_ore", 3)
     stale = not report or now - dt.datetime.fromisoformat(report["generated_at"]) >= dt.timedelta(hours=every)
-    if not news_only or stale or "--report" in sys.argv:
+    # InfoMercati modificato a mano oggi: resta quello fino a domattina (salvo --report)
+    locked = bool(report and load_edits(report)
+                  and dt.datetime.fromisoformat(report["generated_at"]).astimezone(tz).date() == now.astimezone(tz).date())
+    if "--report" in sys.argv or (not locked and (not news_only or stale)):
         try:
             report = build_report(cfg, sections["news"], sections.get("markets", []), now, status) or report
         except Exception:
