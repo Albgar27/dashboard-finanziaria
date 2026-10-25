@@ -95,8 +95,13 @@ Fed) e quando un tasso ufficiale supera una soglia (`soglie:`). Al massimo 5 not
 in Impostazioni di Sistema → Notifiche abilita «Script Editor». Lo stato delle notizie già segnalate è in
 `.stato_avvisi.json` (si può cancellare: al giro successivo si riparte senza notifiche arretrate).
 
-**Watchlist** – in `watchlist:` dentro `config.yaml`: ogni titolo/ETF compare per primo nei Mercati (riquadro
-live) e le notizie che lo citano nel titolo hanno la stella ★ e un filtro dedicato. I titoli inseriti sono esempi.
+**Watchlist** – ogni titolo/ETF compare per primo nei Mercati (riquadro live) e le notizie che lo citano nel
+titolo hanno la stella ★, un filtro dedicato e generano avvisi. Per modificarla, sulla versione del Mac
+(http://127.0.0.1:8799) premi «Modifica watchlist» nella sezione «La mia watchlist»: aggiungi, rinomina, riordina
+(↑ ↓) o togli titoli e indica le parole con cui riconoscerli nelle notizie; «Salva» rigenera e pubblica subito la
+pagina. Il simbolo è quello di TradingView, formato BORSA:SIMBOLO (es. MIL:ENI, XETR:SAP, NASDAQ:AAPL).
+La watchlist viene salvata in `watchlist.yaml`; finché quel file non esiste si usa `watchlist:` di `config.yaml`.
+I titoli che arrivano da Equity Lab si aggiungono in automatico e si gestiscono da Equity Lab.
 
 **Report del giorno (nel Brief)** – un'analisi unica scritta da un modello linguistico che gira sul Mac con
 [Ollama](https://ollama.com) (`gemma3:12b`, gratuito, nessun dato esce dal computer): titolo, quadro della

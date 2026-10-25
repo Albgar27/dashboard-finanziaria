@@ -52,6 +52,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json(403, {"ok": False, "errore": "richiesta non consentita"})
         if self.path == "/api/salva-infomercati":
             return self._save_infomercati()
+        if self.path == "/api/salva-watchlist":
+            return self._save_watchlist()
         if self.path == "/api/ripristina-infomercati":
             EDITS.unlink(missing_ok=True)
             return self._json(200 if self._publish_pages() else 500, {"ok": True})
@@ -95,6 +97,26 @@ class Handler(SimpleHTTPRequestHandler):
                                      "saved_at": time.strftime("%Y-%m-%dT%H:%M:%S%z")}, ensure_ascii=False), encoding="utf-8")
         ok = self._publish_pages()
         return self._json(200 if ok else 500, {"ok": ok, "errore": None if ok else "salvato, ma pubblicazione non riuscita"})
+
+
+    def _save_watchlist(self):
+        size = int(self.headers.get("Content-Length") or 0)
+        if not 0 < size <= 100_000:
+            return self._json(413, {"ok": False, "errore": "richiesta troppo grande"})
+        try:
+            items = json.loads(self.rfile.read(size))["items"]
+            assert isinstance(items, list)
+        except (ValueError, KeyError, TypeError, AssertionError):
+            return self._json(400, {"ok": False, "errore": "richiesta non valida"})
+        import build_dashboard  # stessa validazione usata dal generatore
+        bad = [str(r.get("s", ""))[:30] for r in items if isinstance(r, dict) and not build_dashboard.normalize_watch_item(r)]
+        if bad:
+            return self._json(400, {"ok": False, "errore": "simbolo non valido: " + ", ".join(bad)
+                                    + " (formato BORSA:SIMBOLO, es. MIL:ENI)"})
+        saved = build_dashboard.save_watchlist(items)
+        ok = self._publish_pages()
+        return self._json(200 if ok else 500, {"ok": ok, "voci": len(saved),
+                                              "errore": None if ok else "salvata, ma pagina non rigenerata"})
 
 
 if __name__ == "__main__":

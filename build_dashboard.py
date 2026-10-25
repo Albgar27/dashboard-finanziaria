@@ -482,6 +482,27 @@ def safe_links(rows):
     return [r for r in rows if str(r.get("url", "")).startswith("https://")]
 
 
+EQUITYLAB_ORIGIN = "http://127.0.0.1:8000"  # Equity Lab locale: il pannello lo interroga solo da 127.0.0.1:8799
+SYNC_WATCHLIST = ROOT / "sync" / "equitylab_watchlist.json"
+
+
+def equitylab_watchlist(own: list) -> list:
+    """Titoli aggiunti alla watchlist in Equity Lab (scritti da Equity Lab in sync/), senza duplicati."""
+    try:
+        rows = json.loads(SYNC_WATCHLIST.read_text(encoding="utf-8")).get("items", [])
+    except (OSError, ValueError):
+        return []
+    have = {str(w.get("s", "")).upper() for w in own}
+    out = []
+    for r in rows:
+        s = str(r.get("s", "")).upper()
+        if re.match(r"^[A-Z]+:[A-Z0-9.\-]+$|^[A-Z0-9.\-]+$", s) and s not in have:
+            out.append({"s": s, "d": clean_text(str(r.get("d") or s), 80),
+                        "parole": [clean_text(str(x), 60) for x in (r.get("parole") or [])][:3], "da_equitylab": True})
+            have.add(s)
+    return out
+
+
 def render(data: dict, title: str) -> str:
     js = (ROOT / "assets" / "app.js").read_text(encoding="utf-8")
     css = (ROOT / "assets" / "style.css").read_text(encoding="utf-8")
@@ -491,7 +512,7 @@ def render(data: dict, title: str) -> str:
         "style-src 'unsafe-inline'",
         "img-src 'self' data: https://i.ytimg.com",
         "frame-src https://www.youtube-nocookie.com https://www.tradingview-widget.com https://s.tradingview.com",
-        "connect-src 'self'",
+        f"connect-src 'self' {EQUITYLAB_ORIGIN}",
         "font-src 'none'",
         "object-src 'none'",
         "base-uri 'none'",
@@ -511,6 +532,69 @@ def render(data: dict, title: str) -> str:
 def word_regex(word: str) -> re.Pattern:
     flags = 0 if any(c.isupper() for c in word) else re.I
     return re.compile(r"(?<![\w])" + re.escape(word) + r"(?![\w])", flags)
+
+
+WATCHLIST_PATH = ROOT / "watchlist.yaml"
+SYMBOL_RE = re.compile(r"^[A-Z0-9_]{1,20}:[A-Z0-9._!\-]{1,30}$")
+
+
+def normalize_watch_item(r: dict) -> dict | None:
+    """Voce di watchlist valida: simbolo TradingView BORSA:SIMBOLO, nome, fino a 5 parole per le notizie."""
+    if not isinstance(r, dict):
+        return None
+    s = str(r.get("s", "")).strip().upper()
+    if not SYMBOL_RE.match(s):
+        return None
+    d = clean_text(str(r.get("d") or s), 60) or s
+    parole = r.get("parole") or []
+    if isinstance(parole, str):
+        parole = parole.split(",")
+    parole = [clean_text(str(p), 40) for p in parole if str(p).strip()][:5]
+    return {"s": s, "d": d, "parole": parole}
+
+
+def own_watchlist(cfg: dict) -> list:
+    """La tua watchlist: watchlist.yaml (modificabile dalla dashboard) o, se manca, quella in config.yaml."""
+    rows = cfg.get("watchlist") or []
+    if WATCHLIST_PATH.exists():
+        try:
+            rows = yaml.safe_load(WATCHLIST_PATH.read_text(encoding="utf-8")) or []
+        except (OSError, yaml.YAMLError) as exc:
+            print(f"  watchlist.yaml non leggibile, uso config.yaml: {exc}", file=sys.stderr)
+    out, seen = [], set()
+    for r in rows if isinstance(rows, list) else []:
+        w = normalize_watch_item(r)
+        if w and w["s"] not in seen:
+            out.append(w)
+            seen.add(w["s"])
+    return out
+
+
+def save_watchlist(items: list) -> list:
+    clean = []
+    for r in items[:60]:
+        w = normalize_watch_item(r)
+        if w and w["s"] not in {x["s"] for x in clean}:
+            clean.append(w)
+    head = ("# La tua watchlist, modificabile dalla dashboard (pulsante «Modifica watchlist» sulla versione del Mac).\n"
+            "# s: simbolo TradingView BORSA:SIMBOLO · d: nome mostrato · parole: per riconoscere il titolo nelle notizie\n")
+    write_atomic(WATCHLIST_PATH, head + yaml.safe_dump(clean, allow_unicode=True, sort_keys=False))
+    return clean
+
+
+def apply_watchlist(cfg: dict, news: list) -> tuple[list, dict]:
+    """Calcola la watchlist (tua + Equity Lab), segna le notizie e prepara le sezioni TradingView."""
+    own = own_watchlist(cfg)
+    cfg["watchlist"] = own
+    watchlist = own + equitylab_watchlist(own)
+    for n in news:
+        n.pop("watch", None)
+    tag_watchlist(news, watchlist)
+    tv = dict(cfg.get("tradingview") or {"enabled": False})
+    if watchlist:
+        tv["sections"] = [{"title": "La mia watchlist", "type": "tiles", "watchlist": True,
+                           "groups": [{"name": "", "symbols": [{"s": w["s"], "d": w["d"]} for w in watchlist]}]}] + list(tv.get("sections", []))
+    return watchlist, tv
 
 
 def tag_watchlist(news: list, watchlist: list) -> None:
@@ -1335,9 +1419,14 @@ def main() -> int:
         if not data:
             print("Nessuna pagina precedente da rigenerare.", file=sys.stderr)
             return 1
+        watchlist, tv = apply_watchlist(cfg, data.get("news", []))
+        data["tradingview"] = tv
+        data["watchlist_own"] = cfg["watchlist"]
+        data["watchlist_equitylab"] = [w["d"] for w in watchlist if w.get("da_equitylab")]
+        write_atomic(OUT_PATH, render(data, cfg["settings"].get("title", "Cruscotto finanziario")))
         write_atomic(OUT_PATH.parent / "infomercati.html", render_infomercati(data, tz))
         write_atomic(OUT_PATH.parent / "brief.html", render_brief(data, cfg, tz))
-        print("Pagine InfoMercati e Brief rigenerate.")
+        print("Pagine rigenerate (dashboard, InfoMercati, Brief).")
         return 0
     news_only = "--solo-notizie" in sys.argv
     cfg = yaml.safe_load(CONFIG_PATH.read_text(encoding="utf-8"))
@@ -1376,8 +1465,7 @@ def main() -> int:
             continue
         s["last_ok"] = s["checked_at"] if s["ok"] else prev_ok.get(s["name"])
 
-    watchlist = [w for w in (cfg.get("watchlist") or []) if w.get("s")]
-    tag_watchlist(sections["news"], watchlist)
+    watchlist, tv = apply_watchlist(cfg, sections["news"])
     report = revalidate_report(prev.get("report"))
     every = (cfg.get("report") or {}).get("rigenera_ogni_ore", 3)
     stale = not report or now - dt.datetime.fromisoformat(report["generated_at"]) >= dt.timedelta(hours=every)
@@ -1389,11 +1477,6 @@ def main() -> int:
             report = build_report(cfg, sections["news"], sections.get("markets", []), now, status) or report
         except Exception:
             traceback.print_exc()
-    tv = dict(cfg.get("tradingview") or {"enabled": False})
-    if watchlist:
-        tv["sections"] = [{"title": "La mia watchlist", "type": "tiles", "watchlist": True,
-                           "groups": [{"name": "", "symbols": [{"s": w["s"], "d": w["d"]} for w in watchlist]}]}] + list(tv.get("sections", []))
-
     data = {
         "generated_at": now.isoformat(),
         "markets_at": markets_at,
@@ -1410,6 +1493,9 @@ def main() -> int:
         "glossary": load_glossary(),
         "report": report,
         "status": status,
+        "equitylab_url": EQUITYLAB_ORIGIN,
+        "watchlist_own": cfg["watchlist"],
+        "watchlist_equitylab": [w["d"] for w in watchlist if w.get("da_equitylab")],
     }
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     write_atomic(OUT_PATH, render(data, st.get("title", "Cruscotto finanziario")))

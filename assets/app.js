@@ -356,6 +356,68 @@
       showSymbolLogo: true, isTransparent: true, displayMode: 'adaptive', colorTheme: theme, locale: 'it'
     };
   }
+  // ---------- modifica della watchlist (solo dalla versione servita dal Mac) ----------
+  function watchlistEditor(box) {
+    var isLocal = location.protocol === 'http:' && /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+    if (!isLocal) return;
+    var head = box.querySelector('.sec-head');
+    var open = el('button', { type: 'button', class: 'btn btn-sm' }, 'Modifica watchlist');
+    head.appendChild(open);
+    var panel = el('div', { class: 'wl-editor', hidden: true });
+    box.insertBefore(panel, head.nextSibling);
+    var rows = [];
+    function rowEl(item) {
+      var name = el('input', { type: 'text', value: item.d || '', placeholder: 'Nome (es. Eni)', 'aria-label': 'Nome', maxlength: 60 });
+      var sym = el('input', { type: 'text', value: item.s || '', placeholder: 'BORSA:SIMBOLO (es. MIL:ENI)', 'aria-label': 'Simbolo TradingView', maxlength: 52, class: 'wl-sym' });
+      var words = el('input', { type: 'text', value: (item.parole || []).join(', '), placeholder: 'Parole nelle notizie, separate da virgola', 'aria-label': 'Parole per le notizie' });
+      var up = el('button', { type: 'button', class: 'icon-sm', 'aria-label': 'Sposta su' }, '↑');
+      var down = el('button', { type: 'button', class: 'icon-sm', 'aria-label': 'Sposta giù' }, '↓');
+      var del = el('button', { type: 'button', class: 'icon-sm del', 'aria-label': 'Togli dalla watchlist' }, '✕');
+      var r = el('div', { class: 'wl-row' }, name, sym, words, el('span', { class: 'wl-acts' }, up, down, del));
+      var rec = { el: r, name: name, sym: sym, words: words };
+      up.addEventListener('click', function () { var i = rows.indexOf(rec); if (i > 0) { rows.splice(i, 1); rows.splice(i - 1, 0, rec); redraw(); } });
+      down.addEventListener('click', function () { var i = rows.indexOf(rec); if (i < rows.length - 1) { rows.splice(i, 1); rows.splice(i + 1, 0, rec); redraw(); } });
+      del.addEventListener('click', function () { rows.splice(rows.indexOf(rec), 1); redraw(); });
+      sym.addEventListener('blur', function () { sym.value = sym.value.trim().toUpperCase(); });
+      return rec;
+    }
+    var list = el('div', { class: 'wl-list' });
+    var msg = el('p', { class: 'fine wl-msg', role: 'status' });
+    function redraw() { list.replaceChildren.apply(list, rows.map(function (r) { return r.el; })); }
+    function load() {
+      rows = (DATA.watchlist_own || []).map(rowEl);
+      redraw();
+      msg.textContent = '';
+    }
+    var add = el('button', { type: 'button', class: 'btn btn-sm' }, '+ Aggiungi titolo');
+    add.addEventListener('click', function () { var r = rowEl({}); rows.push(r); redraw(); r.name.focus(); });
+    var save = el('button', { type: 'button', class: 'btn btn-sm btn-primary' }, 'Salva');
+    var cancel = el('button', { type: 'button', class: 'btn btn-sm' }, 'Annulla');
+    var help = el('p', { class: 'fine' }, 'Il simbolo è quello di TradingView nel formato BORSA:SIMBOLO: per esempio MIL:ENI (Borsa Italiana), ',
+      'XETR:SAP (Francoforte), NASDAQ:AAPL, MIL:SWDA per un ETF. Lo trovi cercando il titolo su ',
+      extLink('https://it.tradingview.com/', 'tradingview.com'), '. Le parole servono a riconoscere il titolo nelle notizie (★) e negli avvisi; ',
+      'una parola con maiuscole viene cercata rispettando le maiuscole.');
+    var fromEL = (DATA.watchlist_equitylab || []).length
+      ? el('p', { class: 'fine' }, 'Da Equity Lab (si gestiscono lì): ' + DATA.watchlist_equitylab.join(', ') + '.') : null;
+    panel.append(help, list, el('div', { class: 'wl-bar' }, add, el('span', { class: 'wl-spacer' }), cancel, save), msg);
+    if (fromEL) panel.appendChild(fromEL);
+    open.addEventListener('click', function () { load(); panel.hidden = false; open.hidden = true; });
+    cancel.addEventListener('click', function () { panel.hidden = true; open.hidden = false; });
+    save.addEventListener('click', function () {
+      var items = rows.map(function (r) {
+        return { d: r.name.value.trim(), s: r.sym.value.trim().toUpperCase(),
+          parole: r.words.value.split(',').map(function (x) { return x.trim(); }).filter(Boolean) };
+      }).filter(function (x) { return x.s || x.d; });
+      var bad = items.filter(function (x) { return !/^[A-Z0-9_]{1,20}:[A-Z0-9._!\-]{1,30}$/.test(x.s); });
+      if (bad.length) { msg.textContent = 'Simbolo mancante o non valido per: ' + bad.map(function (x) { return x.d || x.s; }).join(', ') + ' (formato BORSA:SIMBOLO).'; return; }
+      save.disabled = true; msg.textContent = 'Salvataggio in corso…';
+      fetch('/api/salva-watchlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: items }) })
+        .then(function (r) { return r.json(); })
+        .then(function (res) { save.disabled = false; if (res.ok) location.reload(); else msg.textContent = 'Non salvata: ' + (res.errore || 'errore') + '.'; })
+        .catch(function () { save.disabled = false; msg.textContent = 'Il servizio del Mac non risponde.'; });
+    });
+  }
+
   function renderTradingView() {
     var ticker = document.getElementById('ticker');
     var live = document.getElementById('live');
@@ -366,6 +428,7 @@
       var box = el('section', { class: 'live-sec card' + (sec.watchlist ? ' watch' : ''), 'aria-label': sec.title },
         el('div', { class: 'sec-head' }, el('h3', null, sec.title)));
       if (sec.note) box.appendChild(el('p', { class: 'kgroup-note sec-note' }, sec.note));
+      if (sec.watchlist) watchlistEditor(box);
       var mounts = [];
       if (sec.type === 'overview') {
         var slot = el('div', { class: 'tv-slot' });
@@ -442,7 +505,7 @@
       if (n.also && n.also.length) also.push('ripresa da: ' + n.also.join(', '));
       if (also.length) li.appendChild(el('div', { class: 'ni-also' }, also.join(' · ')));
       list.appendChild(li);
-      newsItems.push({ li: li, time: time, date: n.date, watch: !!(n.watch && n.watch.length), cats: cats, hay: norm(n.title + ' ' + (n.summary || '') + ' ' + n.source) });
+      newsItems.push({ li: li, time: time, date: n.date, link: link, radar: false, watch: !!(n.watch && n.watch.length), cats: cats, hay: norm(n.title + ' ' + (n.summary || '') + ' ' + n.source) });
     });
     list.appendChild(el('li', { class: 'empty', id: 'news-empty', hidden: true }, 'Nessuna notizia corrisponde al filtro.'));
     filterNews();
@@ -453,7 +516,7 @@
     var words = q ? q.split(/\s+/) : [];
     var shown = 0;
     newsItems.forEach(function (n) {
-      var ok = (!activeCat || (activeCat === '__watch' ? n.watch : n.cats.indexOf(activeCat) >= 0)) && words.every(function (w) { return n.hay.indexOf(w) >= 0; });
+      var ok = (!activeCat || (activeCat === '__watch' ? n.watch : activeCat === '__radar' ? n.radar : n.cats.indexOf(activeCat) >= 0)) && words.every(function (w) { return n.hay.indexOf(w) >= 0; });
       n.li.hidden = !ok;
       if (ok) shown++;
     });
@@ -676,7 +739,151 @@
     (DATA.discarded || []).forEach(function (d) { ul.appendChild(el('li', null, el('strong', null, d.name + ': '), d.reason)); });
   }
 
-  [renderKpis, renderTradingView, renderNews, renderVideos, renderLinks, renderCalendarWidget, renderGuide, renderStatus].forEach(function (fn) {
+
+  // ---------- pannello Equity Lab (solo pagina aperta dal server locale) ----------
+  // I dati del portafoglio NON sono nella pagina: si leggono dal vivo dall'API locale di Equity Lab.
+  // Sulla versione pubblicata (GitHub Pages) o aperta come file il pannello resta nascosto e non fa richieste.
+  function renderEquityLab() {
+    var box = document.getElementById('eqlab');
+    var isLocal = location.protocol === 'http:' && /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+    if (!box || !isLocal || !DATA.equitylab_url) return;
+    var base = DATA.equitylab_url;
+    var RATING_CLS = { 'Acquisto forte': 'up', 'Acquisto': 'up', 'Mantieni': 'flat', 'Vendita': 'down', 'Vendita forte': 'down' };
+    function pct(v, d) { return v === null || v === undefined ? 'n.d.' : fmtNum(v * 100, d === undefined ? 1 : d) + '%'; }
+    function eur(v) { return v === null || v === undefined ? 'n.d.' : fmtNum(v, 0) + ' €'; }
+    function draw(d) {
+      var kids = [];
+      var head = el('div', { class: 'sec-head' }, el('h2', null, 'Equity Lab'),
+        el('span', { class: 'tag tag-live' }, el('span', { class: 'pulse', 'aria-hidden': 'true' }), 'sincronizzato · ' + fmtDateTime(d.at)),
+        el('a', { class: 'btn btn-sm', href: base + '/', target: '_blank', rel: 'noopener' }, 'Apri Equity Lab'));
+      kids.push(head);
+      var tiles = el('div', { class: 'eqlab-grid' });
+      if (d.portfolio) {
+        var p = d.portfolio, dc = p.daily || {};
+        tiles.appendChild(el('div', { class: 'eqlab-tile' }, el('span', { class: 'eqlab-l' }, 'Portafoglio ' + p.name + (p.is_example && p.name !== 'ESEMPIO' ? ' (ESEMPIO)' : '')),
+          el('strong', { class: 'eqlab-v' }, eur(p.value)), el('span', { class: 'eqlab-s' }, p.positions + ' posizioni' + (p.partial ? ' · valore parziale' : ''))));
+        tiles.appendChild(el('div', { class: 'eqlab-tile' }, el('span', { class: 'eqlab-l' }, 'Variazione giornaliera'),
+          el('strong', { class: 'eqlab-v ' + (dc.value > 0 ? 'up' : dc.value < 0 ? 'down' : '') }, dc.value === null || dc.value === undefined ? 'n.d.' : eur(dc.value) + ' (' + pct(dc.pct, 2) + ')'),
+          el('span', { class: 'eqlab-s' }, dc.reason || 'chiusura del ' + String(dc.to || '').split('-').reverse().join('/'))));
+        var top = el('ol', { class: 'eqlab-top' });
+        (p.top || []).forEach(function (t) {
+          top.appendChild(el('li', null, el('span', null, t.name || t.key), el('span', { class: 'eqlab-s' }, pct(t.weight, 0))));
+        });
+        tiles.appendChild(el('div', { class: 'eqlab-tile' }, el('span', { class: 'eqlab-l' }, 'Prime posizioni'), top));
+      } else {
+        tiles.appendChild(el('div', { class: 'eqlab-tile' }, el('span', { class: 'eqlab-l' }, 'Portafoglio'), el('span', { class: 'eqlab-s' }, 'nessun portafoglio importato')));
+      }
+      kids.push(tiles);
+      var rd = d.radar || {};
+      if (rd.ok) {
+        var SIG_CLS = { 'Positivo': 'up', 'Negativo': 'down', 'Contrastato': 'flat', 'Da monitorare': 'flat' };
+        var arrow = function (v) { return v > 0 ? '↑' : v < 0 ? '↓' : '→'; };
+        var radar = el('div', { class: 'eqlab-radar' });
+        radar.appendChild(el('div', { class: 'eqlab-radar-head' }, el('h3', null, 'Radar notizie'),
+          el('span', { class: 'eqlab-s' }, rd.news_read + ' notizie lette · ' + rd.news_matched + ' con eventi riconosciuti'),
+          el('a', { href: base + '/notizie', target: '_blank', rel: 'noopener' }, 'Dettagli e regole')));
+        if ((rd.macro || []).length) {
+          var mac = el('ul', { class: 'eqlab-macro' });
+          rd.macro.forEach(function (m) {
+            mac.appendChild(el('li', { class: m.direction > 0 ? 'up' : m.direction < 0 ? 'down' : '' },
+              el('strong', null, arrow(m.direction) + ' ' + m.label),
+              el('span', { class: 'eqlab-s' }, m.horizon + ' · ' + m.count + (m.count === 1 ? ' notizia' : ' notizie')),
+              el('span', { class: 'eqlab-key' }, m.key),
+              safeUrl(m.link) ? el('a', { href: safeUrl(m.link), target: '_blank', rel: 'noopener noreferrer', class: 'eqlab-s' }, m.headline) : null));
+          });
+          radar.appendChild(mac);
+        }
+        var sigs = (rd.signals || []);
+        if (sigs.length) {
+          var tb2 = el('tbody');
+          sigs.slice(0, 8).forEach(function (x) {
+            tb2.appendChild(el('tr', null,
+              el('th', { scope: 'row' }, x.ticker ? el('a', { href: base + '/titoli/' + encodeURIComponent(x.ticker), target: '_blank', rel: 'noopener' }, x.name) : x.name),
+              el('td', null, el('span', { class: 'eqlab-badge ' + (SIG_CLS[x.signal] || '') }, x.signal)),
+              el('td', null, x.horizon),
+              el('td', { class: 'eqlab-key' }, x.main_event + ': ' + x.key_reading),
+              el('td', null, x.action)));
+          });
+          radar.appendChild(el('div', { class: 'tablewrap' }, el('table', { class: 'eqlab-table' },
+            el('caption', null, 'Segnali dalle notizie sui tuoi titoli (portafoglio e watchlist)'),
+            el('thead', null, el('tr', null, el('th', { scope: 'col' }, 'Titolo'), el('th', { scope: 'col' }, 'Segnale'), el('th', { scope: 'col' }, 'Orizzonte'),
+              el('th', { scope: 'col' }, 'Chiave di lettura'), el('th', { scope: 'col' }, 'Cosa fare'))), tb2)));
+        } else {
+          radar.appendChild(el('p', { class: 'fine' }, 'Nessuna notizia recente riguarda i titoli del portafoglio o della watchlist.'));
+        }
+        radar.appendChild(el('p', { class: 'fine' }, 'Regole: ' + rd.rules + '. Nessun modello linguistico: vocabolario di eventi dichiarato in Equity Lab.'));
+        kids.push(radar);
+        annotateNews(rd.news_tags || {});
+      }
+      var rows = ((d.signals || {}).rows || []).filter(function (r) { return r.score !== null && r.score !== undefined; });
+      if (rows.length) {
+        var tb = el('tbody');
+        rows.slice(0, 8).forEach(function (r) {
+          tb.appendChild(el('tr', null,
+            el('th', { scope: 'row' }, el('a', { href: base + '/titoli/' + encodeURIComponent(r.ticker), target: '_blank', rel: 'noopener' }, r.ticker),
+              el('span', { class: 'eqlab-links' },
+                el('a', { href: base + '/trimestrali/' + encodeURIComponent(r.ticker), target: '_blank', rel: 'noopener', title: 'Trimestrali: risultati, management, tesi' }, 'trim.'),
+                el('a', { href: base + '/valutazione/' + encodeURIComponent(r.ticker), target: '_blank', rel: 'noopener', title: 'Valutazione DCF' }, 'DCF'))),
+            el('td', null, el('span', { class: 'eqlab-badge ' + (RATING_CLS[r.rating] || '') }, r.rating)),
+            el('td', { class: 'num' }, fmtNum(r.score, 0)),
+            el('td', { class: 'num' }, r.target ? fmtNum(r.target, 2) : 'n.d.'),
+            el('td', { class: 'num ' + (r.expected_return > 0 ? 'up' : r.expected_return < 0 ? 'down' : '') }, pct(r.expected_return))));
+        });
+        var table = el('table', { class: 'eqlab-table' },
+          el('caption', null, 'Segnali della watchlist · scansione ' + fmtDateTime(d.signals.at)),
+          el('thead', null, el('tr', null, el('th', { scope: 'col' }, 'Titolo'), el('th', { scope: 'col' }, 'Segnale'),
+            el('th', { scope: 'col' }, 'Punteggio'), el('th', { scope: 'col' }, 'Obiettivo'), el('th', { scope: 'col' }, 'Rend. atteso'))), tb);
+        kids.push(el('div', { class: 'tablewrap' }, table));
+      } else {
+        kids.push(el('p', { class: 'fine' }, 'Nessuna scansione dei segnali: in Equity Lab apri Segnali → "Scansiona la watchlist".'));
+      }
+      box.replaceChildren.apply(box, kids);
+      box.hidden = false;
+    }
+    var radarChip = null;
+    function annotateNews(tags) {
+      var n = 0;
+      newsItems.forEach(function (it) {
+        var old = it.li.querySelector('.ni-radar');
+        if (old) old.remove();
+        var t = tags[it.link];
+        it.radar = !!t;
+        if (!t) return;
+        n++;
+        var cls = t.direction > 0 ? 'up' : t.direction < 0 ? 'down' : 'flat';
+        var who = t.targets && t.targets.length ? ' → ' + (t.targets.length > 2 ? t.targets.slice(0, 2).join(', ') + ' e altri' : t.targets.join(', ')) : '';
+        it.li.appendChild(el('div', { class: 'ni-radar ' + cls, title: 'Radar notizie di Equity Lab (regole esplicite)' },
+          el('span', { class: 'ni-radar-dir', 'aria-hidden': 'true' }, t.direction > 0 ? '↑' : t.direction < 0 ? '↓' : '→'),
+          t.labels.join(' · ') + ' · ' + t.horizon + who));
+      });
+      var filters = document.getElementById('news-filters');
+      if (!radarChip && n && filters) {
+        radarChip = el('button', { type: 'button', class: 'chip', 'aria-pressed': 'false', title: 'Notizie con eventi riconosciuti dal Radar di Equity Lab' },
+          el('span', { class: 'star', 'aria-hidden': 'true' }, '◎'), 'Radar', el('span', { class: 'n' }, String(n)));
+        radarChip.addEventListener('click', function () {
+          activeCat = '__radar';
+          chipEls.forEach(function (x) { x.setAttribute('aria-pressed', x === radarChip ? 'true' : 'false'); });
+          filterNews();
+        });
+        chipEls.push(radarChip);
+        filters.insertBefore(radarChip, filters.children[1] || null);
+      } else if (radarChip) {
+        radarChip.querySelector('.n').textContent = String(n);
+      }
+    }
+    function load() {
+      fetch(base + '/api/sync/summary', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+        .then(draw)
+        .catch(function () {
+          box.replaceChildren(el('p', { class: 'fine' }, 'Equity Lab non è attivo su ' + base + ' (avvialo con "make dev" nella cartella equity-lab).'));
+          box.hidden = false;
+        });
+    }
+    load();
+    setInterval(function () { if (!document.hidden) load(); }, 60000);
+  }
+
+  [renderKpis, renderTradingView, renderNews, renderVideos, renderLinks, renderCalendarWidget, renderGuide, renderStatus, renderEquityLab].forEach(function (fn) {
     try { fn(); } catch (e) { if (window.console) console.error(fn.name, e); }
   });
   Array.prototype.forEach.call(document.querySelectorAll('.reveal'), function (n) { if (revealIO) revealIO.observe(n); else n.classList.add('in'); });
