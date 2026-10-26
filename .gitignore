@@ -20,3 +20,7 @@ docs/lettera.html
 
 # file scritti da Equity Lab (locale)
 sync/
+
+# Analisi PMI: dati dei clienti, solo locali
+analisi-pmi/dati/
+*.sqlite

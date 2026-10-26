@@ -7,6 +7,9 @@ nessun servizio a pagamento.
 
 > I dati sono in ritardo (alcuni sono medie mensili) e non costituiscono consulenza.
 
+> **Analisi PMI** – nella cartella [`analisi-pmi/`](analisi-pmi/README.md) c'è la piattaforma locale per analizzare le aziende
+> clienti (bilancio XBRL, TFR, TFM, rischi, segnali di crisi, report). Gira solo sul Mac e non viene pubblicata.
+
 ## Struttura
 
 | File | A cosa serve |
