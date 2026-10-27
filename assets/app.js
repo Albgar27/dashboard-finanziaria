@@ -89,7 +89,7 @@
   function currentTheme() {
     var t = root.getAttribute('data-theme');
     if (t) return t;
-    return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    return 'light'; // firma comune con Equity Lab: luce di giorno predefinita, sera su richiesta
   }
   function applyTheme(t) {
     root.setAttribute('data-theme', t);
@@ -98,12 +98,12 @@
     themeBtn.setAttribute('aria-label', dark ? 'Passa al tema chiaro' : 'Passa al tema scuro');
     themeBtn.title = dark ? 'Tema chiaro' : 'Tema scuro';
   }
-  try { var saved = localStorage.getItem('dash-theme'); if (saved === 'dark' || saved === 'light') root.setAttribute('data-theme', saved); } catch (e) {}
+  try { var saved = localStorage.getItem('dash-theme-glass'); if (saved === 'dark' || saved === 'light') root.setAttribute('data-theme', saved); } catch (e) {}
   applyTheme(currentTheme());
   themeBtn.addEventListener('click', function () {
     var t = currentTheme() === 'dark' ? 'light' : 'dark';
     applyTheme(t);
-    try { localStorage.setItem('dash-theme', t); } catch (e) {}
+    try { localStorage.setItem('dash-theme-glass', t); } catch (e) {}
     themeListeners.forEach(function (fn) { fn(t); });
   });
 

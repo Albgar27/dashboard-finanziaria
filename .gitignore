@@ -24,3 +24,4 @@ sync/
 # Analisi PMI: dati dei clienti, solo locali
 analisi-pmi/dati/
 *.sqlite
+docs/fonts/

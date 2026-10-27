@@ -503,7 +503,19 @@ def equitylab_watchlist(own: list) -> list:
     return out
 
 
+def copy_fonts() -> None:
+    """Carattere comune con Equity Lab (Archivo, licenza OFL): copiato accanto alla pagina pubblicata."""
+    src, dst = ROOT / "assets" / "fonts", OUT_PATH.parent / "fonts"
+    if not src.is_dir():
+        return
+    dst.mkdir(exist_ok=True)
+    for f in src.iterdir():
+        if f.suffix in (".woff2", ".txt") and (not (dst / f.name).exists() or (dst / f.name).read_bytes() != f.read_bytes()):
+            (dst / f.name).write_bytes(f.read_bytes())
+
+
 def render(data: dict, title: str) -> str:
+    copy_fonts()
     js = (ROOT / "assets" / "app.js").read_text(encoding="utf-8")
     css = (ROOT / "assets" / "style.css").read_text(encoding="utf-8")
     csp = "; ".join([
@@ -513,7 +525,7 @@ def render(data: dict, title: str) -> str:
         "img-src 'self' data: https://i.ytimg.com",
         "frame-src https://www.youtube-nocookie.com https://www.tradingview-widget.com https://s.tradingview.com",
         f"connect-src 'self' {EQUITYLAB_ORIGIN}",
-        "font-src 'none'",
+        "font-src 'self'",  # Archivo servito dalla cartella docs/fonts, nessun server esterno
         "object-src 'none'",
         "base-uri 'none'",
         "form-action 'none'",
