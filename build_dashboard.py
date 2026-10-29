@@ -856,7 +856,11 @@ CLICHE_RE = re.compile(r"(navigare|scenario (complesso|incerto)|contesto (comple
                        r"monitorare (attentamente|da vicino|con attenzione|costantemente)|monitoraggio costante|le armi migliori|"
                        r"è fondamentale (rivedere|mantenere|diversificare)|prudenza e (la )?consapevolezza|"
                        r"diversificare (gli investimenti|il portafoglio) per (proteggere|mitigare)|richiede(ndo)? un'attenta|"
-                       r"la volatilità dei mercati è una costante)", re.I)
+                       r"la volatilità dei mercati è una costante|auspicabil|in ultima analisi|possibili (implicazioni|ripercussioni)|"
+                       r"implicazioni (future|significative|importanti)|non è da escludere|cambia(re)? il quadro|"
+                       r"potrebbe (influenzare|avere ripercussioni|incidere) (sui mercati|sull'economia)|la questione non è astratta|"
+                       r"la palla passa|monitorare l'evoluzione|valutare attentamente|tenuta del sistema finanziario|"
+                       r"contesto internazionale (già )?complesso|non bisogna illudersi)", re.I)
 
 
 def _short_title(titolo: str, limit: int = 90) -> str:
@@ -906,11 +910,12 @@ def build_report(cfg: dict, news: list, markets: list, now: dt.datetime, status:
         extra = f" [watchlist: {', '.join(n['watch'])}]" if n.get("watch") else ""
         return f"[{i}]{extra} {n['title']}{summ}"
 
-    def check_on(text, ids):
+    def check_on(text, ids, memo=None):
         """Controlla il testo solo sulle notizie ids e toglie i riferimenti ad altre notizie."""
         nonlocal dropped
         src = "\n".join(items[i - 1]["title"] + " " + items[i - 1].get("summary", "") for i in ids)
-        out, d = _check_free_text(text, src, _strip_accents(src), _num_forms(src) | {str(i) for i in ids}, N, seen)
+        out, d = _check_free_text(text, src, _strip_accents(src), _num_forms(src) | {str(i) for i in ids}, N,
+                                  seen if memo is None else memo)
         dropped += d
         out = re.sub(r"\[(\d+)\]", lambda m: m.group(0) if int(m.group(1)) in ids else "", out)
         sents = _sentences(out)
@@ -944,23 +949,94 @@ def build_report(cfg: dict, news: list, markets: list, now: dt.datetime, status:
             return [c for c in cands if len(bt & norm_tokens(items[c - 1]["title"] + " " + items[c - 1].get("summary", ""))) >= 2]
         main_rel = related(main[0], valid(pick.get("correlate"), used))[:3]
         used += main_rel
+
+        def widen(base, have, limit):
+            """Aggiunge le altre notizie (anche fuori selezione) che citano gli stessi soggetti della notizia base."""
+            nonlocal N
+            src = items[base - 1]
+            ents = {_strip_accents(w) for w in WORD_RE.findall(src["title"]) if w[0].isupper() and len(w) >= 3
+                    and _strip_accents(w) not in COMMON_CAPS}
+            ents |= {_strip_accents(w) for w in re.findall(r"\b[A-Z]{2,5}\b", src["title"])}
+            if not ents:
+                return []
+            rx = re.compile(r"\b(" + "|".join(re.escape(x) for x in sorted(ents)) + r")\b")
+            known = {n["link"]: i for i, n in enumerate(items, 1)}
+            extra = []
+            need = min(2, len(ents))
+            for n in sorted(news, key=lambda x: x["date"], reverse=True):
+                if len(have) + len(extra) >= limit:
+                    break
+                if len(set(rx.findall(_strip_accents(n["title"] + " " + n.get("summary", ""))))) < need:
+                    continue
+                k = known.get(n["link"])
+                if k is None:
+                    items.append(n)
+                    N = len(items)
+                    k = N
+                    known[n["link"]] = k
+                if k not in have and k not in extra and k not in used:
+                    extra.append(k)
+            return extra
+        more = widen(main[0], main + main_rel, 8)
+        main_rel += more
+        used += more
         apps = []
         for ap in (pick.get("approfondimenti") or [])[:2]:
             if isinstance(ap, dict):
                 k = valid(ap.get("n"), used)[:1]
                 if k:
                     rel = related(k[0], valid(ap.get("correlate"), used + k))[:2]
-                    apps.append(k + rel)
                     used += k + rel
+                    rel += widen(k[0], k + rel, 5)
+                    apps.append(k + rel)
+                    used += rel
         num_n = valid(pick.get("numero"), used)[:1]
         used += num_n
         brevi = valid(pick.get("in_breve"), used)[:4]
 
-        def write_section(ids, lunghezza):
-            out = _ollama_json(rc, style, f"Notizie su questo tema:\n" + "\n".join(line(i) for i in ids)
-                               + f'\n\nScrivi questo pezzo della newsletter: {lunghezza}. JSON: {{"titolo": "titolo specifico che dica cosa è successo", "testo": "..."}}'
+        def facts_for(ids):
+            """Scheda dei fatti concreti contenuti nelle notizie, ognuno verificato sulle sue fonti."""
+            out = _ollama_json(rc, "Sei un giornalista economico che prepara la scheda dei fatti prima di scrivere. Rispondi SOLO con JSON.",
+                               "Notizie:\n" + "\n".join(line(i) for i in ids)
+                               + '\n\nElenca i fatti concreti contenuti in queste notizie: chi, cosa, quanto, quando, prossimi passaggi, '
+                                 'posizioni delle parti, numeri. Un fatto per riga, scritto in italiano, con i numeri delle notizie da cui '
+                                 'viene. Solo ciò che è scritto, niente interpretazioni. JSON: {"fatti": [{"fatto": "...", "n": [numero]}]}', 0.1)
+            facts, memo = [], set()
+            for ent in out.get("fatti", []) if isinstance(out.get("fatti"), list) else []:
+                if not isinstance(ent, dict):
+                    continue
+                refs = [k for k in valid(ent.get("n")) if k in ids] or ids[:1]
+                txt = check_on(str(ent.get("fatto", "")).rstrip(" .") + " " + "".join(f"[{k}]" for k in refs) + ".", refs, memo)
+                if txt:
+                    facts.append(txt)
+            return facts[:14]
+
+        def write_section(ids, lunghezza, facts=None):
+            facts = facts if facts is not None else facts_for(ids)
+            if facts:
+                base = ("FATTI VERIFICATI (usa solo questi, con i loro numeri):\n" + "\n".join("- " + f for f in facts)
+                        + "\n\nNotizie di riferimento:\n" + "\n".join(line(i) for i in ids))
+            else:
+                base = "Notizie su questo tema:\n" + "\n".join(line(i) for i in ids)
+            out = _ollama_json(rc, style, base
+                               + f"\n\nScrivi questo pezzo della newsletter: {lunghezza}. Comincia spiegando in modo chiaro e concreto "
+                                 "che cosa sta succedendo (chi, cosa, quanto, quali sono i prossimi passaggi), come se il lettore non ne "
+                                 "sapesse nulla. Poi spiega perché conta. Le conseguenze per chi risparmia devono discendere dai fatti: se "
+                                 "non sono certe, dì da che cosa dipendono; niente ipotesi vaghe o generiche."
+                               + ' JSON: {"titolo": "titolo specifico che dica cosa è successo", "testo": "..."}'
                                + ' (paragrafi separati da \\n\\n).')
-            paras = [check_on(p, ids) for p in str(out.get("testo", "")).split("\n\n")]
+            paras = []
+            for p in str(out.get("testo", "")).split("\n\n"):
+                # niente ipotesi senza fonte; niente paragrafi che iniziano con un rimando a una frase scartata
+                ss = [s for s in _sentences(check_on(p, ids))
+                      if not re.search(r"\bpotrebber?o?\b", s, re.I)]
+                while ss and re.match(r"(Questo|Questa|Ciò|Tale|Inoltre|Tuttavia|Ma)\b", ss[0]):
+                    ss.pop(0)
+                paras.append(" ".join(ss))
+            first = (_sentences(str(out.get("testo", "")).split("\n\n")[0]) or [""])[0]
+            if facts and paras and not check_on(first, ids, set()):
+                # la frase d'apertura non ha passato i controlli: si apre con il primo fatto verificato
+                paras[0] = (facts[0] + " " + paras[0]).strip()
             testo = "\n\n".join(p for p in paras if p)
             if not testo:
                 return None
@@ -968,11 +1044,12 @@ def build_report(cfg: dict, news: list, markets: list, now: dt.datetime, status:
             if any(len(k) >= 3 and w[0].isupper() and k not in COMMON_CAPS and not re.search(r"\b" + re.escape(k[:5]), _strip_accents(testo))
                    for i, w in enumerate(WORD_RE.findall(titolo)) if i > 0 for k in [_strip_accents(w.strip(".-'’:"))]):
                 titolo = re.split(r"[:–-]", titolo)[0].strip()
-            return {"titolo": titolo, "testo": testo}
+            return {"titolo": titolo, "testo": testo, "fatti": facts}
 
         # 2) pezzi, ognuno con le sole sue fonti
-        apertura = write_section(main + main_rel, "è l'apertura, la notizia più importante del giorno: 2 o 3 paragrafi su cosa è "
-                                 "successo, perché conta e quali effetti può avere per chi investe o risparmia")
+        apertura = write_section(main + main_rel, "è l'apertura, la notizia più importante del giorno: 3 paragrafi. Il primo "
+                                 "racconta i fatti con precisione; il secondo spiega il contesto e perché conta; il terzo dice che cosa "
+                                 "cambia concretamente per chi ha risparmi o investimenti collegati")
         approfondimenti = [s for s in (write_section(ids, "un approfondimento di un solo paragrafo da 3-5 frasi, con un taglio "
                                                      "diverso da una cronaca: spiega il perché e le conseguenze") for ids in apps) if s]
         numero = None
@@ -995,7 +1072,7 @@ def build_report(cfg: dict, news: list, markets: list, now: dt.datetime, status:
                 if isinstance(ent, dict):
                     k = valid(ent.get("n"))
                     if k and k[0] in brevi:
-                        x = check_on(str(ent.get("frase", "")).rstrip() + f" [{k[0]}]", k)
+                        x = check_on(re.sub(r"\s*\[\d+\]", "", str(ent.get("frase", ""))).rstrip() + f" [{k[0]}]", k)
                         if x:
                             in_breve.append(x)
         if not apertura:
@@ -1004,29 +1081,49 @@ def build_report(cfg: dict, news: list, markets: list, now: dt.datetime, status:
         written = "\n\n".join([f"{apertura['titolo']}\n{apertura['testo']}"] + [f"{s['titolo']}\n{s['testo']}" for s in approfondimenti]
                               + ([f"Il numero del giorno: {numero['valore']} — {numero['testo']}"] if numero else []))
         all_ids = sorted(set(main + main_rel + [i for ids in apps for i in ids] + num_n))
-        out = _ollama_json(rc, style.replace("Dopo ogni frase con un fatto metti il numero della notizia, es. [4] o [2][7].", ""),
-                           "Articolo già scritto:\n" + written
-                           + '\n\nScrivi: "titolo" (forte e specifico, max 12 parole, sul tema principale), "sommario" (1-2 frasi '
-                             'sotto il titolo) e "punto_di_vista" (4-5 frasi in prima persona: la tua lettura concreta di cosa '
-                             'significano questi fatti per i risparmi e i portafogli dei clienti, citando i fatti dell\'articolo; '
-                             'niente frasi generiche). Usa solo fatti presenti nell\'articolo. JSON: {"titolo": "...", '
-                             '"sommario": "...", "punto_di_vista": "..."}', 0.5)
-        art_src = written
+        style_nocite = style.replace("Dopo ogni frase con un fatto metti il numero della notizia, es. [4] o [2][7].", "")
+        out = _ollama_json(rc, style_nocite, "Articolo già scritto:\n" + written
+                           + '\n\nScrivi "titolo" (forte e specifico, max 12 parole, sul tema principale: deve far capire il fatto) e '
+                             '"sommario" (1-2 frasi sotto il titolo con il fatto principale). Usa solo fatti presenti nell\'articolo. '
+                             'JSON: {"titolo": "...", "sommario": "..."}', 0.4)
+        art_src = written + "\n" + "\n".join(apertura.get("fatti", []))
         art_norm = _strip_accents(art_src)
+        art_tokens = [norm_tokens(s) for s in _sentences(written)]
 
-        def check_art(text):
+        def check_art(text, no_repeat=False):
             nonlocal dropped
             o, d = _check_free_text(text, art_src, art_norm, _num_forms(art_src), N, seen)
             dropped += d
             sents = _sentences(re.sub(r"\s*\[\d+\]", "", o))
-            keep = [s for s in sents if not CLICHE_RE.search(s)]
+            keep = []
+            for s in sents:
+                tk = norm_tokens(s)
+                rep = no_repeat and tk and any(len(tk & a) / max(1, len(tk)) >= 0.6 for a in art_tokens if a)
+                if not CLICHE_RE.search(s) and not rep:
+                    keep.append(s)
             dropped += len(sents) - len(keep)
             return " ".join(keep)
         titolo = clean_text(str(out.get("titolo", "")), 140)
         if titolo and not check_art(titolo.rstrip(".") + "."):
             titolo = apertura["titolo"]
         sommario = check_art(out.get("sommario", ""))
-        punto = check_art(out.get("punto_di_vista", ""))
+        # il punto di vista è una presa di posizione, non un riassunto: tesi, argomento, rischio, conseguenza pratica
+        pov_prompt = ("FATTI DELLA GIORNATA:\n" + "\n".join("- " + re.sub(r"\s*\[\d+\]", "", f) for f in apertura.get("fatti", []))
+                      + "\n\nArticolo già scritto (NON riassumerlo e NON ripeterne le frasi):\n" + written
+                      + '\n\nScrivi "punto_di_vista": la tua opinione personale di consulente, in prima persona, 5-6 frasi:\n'
+                        "1) una tesi netta: che cosa ne pensi davvero del fatto principale (per esempio se è una buona o una cattiva "
+                        "notizia per chi risparmia, se il mercato lo sta sopravvalutando o sottovalutando) e perché;\n"
+                        "2) l'argomento più forte a sostegno, con un fatto preciso;\n"
+                        "3) il rischio o il punto debole della tua tesi;\n"
+                        "4) che cosa ne ricavi in concreto: che cosa guarderesti nelle prossime settimane e che cosa farebbe o non "
+                        "farebbe un risparmiatore prudente.\n"
+                        "Niente frasi generiche valide per qualsiasi giorno. JSON: {\"punto_di_vista\": \"...\"}")
+        punto = ""
+        for temp in (0.6, 0.8):
+            out = _ollama_json(rc, style_nocite, pov_prompt, temp)
+            punto = check_art(out.get("punto_di_vista", ""), no_repeat=True)
+            if len(_sentences(punto)) >= 3:
+                break
     except Exception as exc:
         status.append(status_row(name, "Report", "", False,
                                  "risposta non valida" if isinstance(exc, ValueError) else short_error(exc), now))
