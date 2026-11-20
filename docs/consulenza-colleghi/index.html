@@ -1,4 +1,5 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><style id="fix-ipad-pdf">@supports (height:100dvh){.box{max-height:calc(100dvh - 40px)}.box.largo{height:calc(100dvh - 40px)}@media(max-width:900px){.box.largo{height:auto}}}.mf{flex-shrink:0}.mh{flex-shrink:0}</style>
+</head><body>
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -1462,7 +1463,8 @@ Stampa
    &lt;div class=&quot;rv&quot;&gt;&lt;h3 style=&quot;margin-bottom:10px&quot;&gt;Soluzione 5 – Grandi cure&lt;/h3&gt;&lt;div class=&quot;tbl-wrap&quot;&gt;&lt;table class=&quot;t&quot; id=&quot;smT5&quot;&gt;&lt;/table&gt;&lt;/div&gt;&lt;/div&gt;
    &lt;div class=&quot;rv&quot;&gt;&lt;h3 style=&quot;margin-bottom:10px&quot;&gt;Soluzione 4 – Diarie&lt;/h3&gt;&lt;div class=&quot;tbl-wrap&quot;&gt;&lt;table class=&quot;t&quot; id=&quot;smT4&quot;&gt;&lt;/table&gt;&lt;/div&gt;&lt;/div&gt;
   &lt;/div&gt;
-  &lt;p class=&quot;note&quot;&gt;La classificazione delle singole lesioni, interventi e patologie è negli allegati delle condizioni di assicurazione.&lt;/p&gt;
+  &lt;div id=&quot;smTipi&quot; style=&quot;margin-top:22px&quot;&gt;&lt;/div&gt;
+  &lt;p class=&quot;note&quot;&gt;Elenco completo delle singole lesioni, interventi e patologie negli allegati delle condizioni di assicurazione (Ed. 625, 30 giugno 2025).&lt;/p&gt;
  &lt;/div&gt;
 &lt;/section&gt;
 &lt;section class=&quot;pb&quot;&gt;
@@ -2712,6 +2714,39 @@ function prem(sol, pkg, f){
   var COMUNI = &#x27;Guerra e atti terroristici, terremoti e alluvioni, radiazioni ionizzanti, abuso di psicofarmaci e stupefacenti, atti dolosi e tentato suicidio.&#x27;;
   var INFORT = &#x27;Per gli infortuni: guida in stato di ebbrezza o senza abilitazione, sport professionistici, paracadutismo, immersioni con autorespiratore, sport estremi e alcune attività lavorative a rischio.&#x27;;
   var PREES = &#x27;Le conseguenze di infortuni, malattie o difetti fisici conosciuti o diagnosticati prima della firma della proposta.&#x27;;
+  /* che cosa è indennizzato: tipologie dagli allegati delle condizioni (Ed. 625, 30 giugno 2025) */
+  var TIPI = {
+    s1: {t: &#x27;Lesioni indennizzate&#x27;, c: &#x27;Cluster&#x27;, r: [
+      [&#x27;Fratture&#x27;, &#x27;cranio e volto, colonna vertebrale, coste e sterno, bacino, braccia, mani, gambe e piedi (per esempio femore, tibia, vertebre, calcagno)&#x27;, &#x27;0–3&#x27;],
+      [&#x27;Lesioni viscerali&#x27;, &#x27;asportazione o resezione di organi interni: milza, rene, fegato, stomaco, intestino, pancreas, polmone; protesi sull\&#x27;aorta&#x27;, &#x27;2–6&#x27;],
+      [&#x27;Organi di senso e fisionomia&#x27;, &#x27;perdita della vista o di un occhio, sordità, perdita di padiglioni auricolari, naso o lingua; perdita di organi genitali o della mammella per tumore&#x27;, &#x27;1–6&#x27;],
+      [&#x27;Muscoli, tendini e legamenti&#x27;, &#x27;trattati chirurgicamente: crociato, menisco, tendine d\&#x27;Achille, quadricipite, bicipite, legamenti di caviglia, ginocchio e dita&#x27;, &#x27;0–2&#x27;],
+      [&#x27;Lussazioni&#x27;, &#x27;spalla, gomito, polso, pollice, anca, caviglia, alluce, vertebre cervicali (evidenziate radiologicamente)&#x27;, &#x27;0–2&#x27;],
+      [&#x27;Amputazioni&#x27;, &#x27;dalle falangi delle dita fino alla mano, al piede o all\&#x27;arto&#x27;, &#x27;1–6&#x27;],
+      [&#x27;Sistema nervoso&#x27;, &#x27;lesioni permanenti: paralisi di nervi cranici e degli arti, afasia, monoparesi, paraparesi, tetraparesi&#x27;, &#x27;2–6&#x27;],
+      [&#x27;Ustioni dal 2° grado&#x27;, &#x27;corpo oltre il 9% della superficie, volto oltre il 5%&#x27;, &#x27;2–4&#x27;]],
+      n: &#x27;Sono indennizzate solo le lesioni elencate nell\&#x27;Allegato 1 delle condizioni di assicurazione.&#x27;},
+    s2: {t: &#x27;Interventi indennizzati&#x27;, c: &#x27;Classe&#x27;, r: [
+      [&#x27;Classe 1&#x27;, &#x27;artroscopie, laparoscopie, endoscopie operative, cataratta, tonsille e adenoidi, taglio cesareo, osteosintesi di piccoli segmenti, asportazione di tumori maligni della pelle, interventi sulle vene&#x27;, &#x27;1&#x27;],
+      [&#x27;Classe 2&#x27;, &#x27;protesi ortopediche, laparotomie, osteosintesi di medi e grandi segmenti, sutura di tendini, interventi sulle arterie, angioplastica e TAVI, toracoscopie, laparoscopie per tumori maligni, trapianto di cornea&#x27;, &#x27;2&#x27;],
+      [&#x27;Classe 3&#x27;, &#x27;craniotomie, toracotomie, laparotomie per tumori maligni, asportazione di linfonodi per tumore, artrodesi di oltre 3 vertebre, trapianto di midollo osseo&#x27;, &#x27;3&#x27;],
+      [&#x27;Classe 4&#x27;, &#x27;craniotomie per tumori maligni, trapianti di organi toracici e addominali&#x27;, &#x27;4&#x27;]],
+      n: &#x27;Un intervento non presente nell\&#x27;Allegato 2 è ricondotto alla classe più simile per importanza e complessità.&#x27;},
+    s5: {t: &#x27;Patologie indennizzate&#x27;, c: &#x27;Classe&#x27;, r: [
+      [&#x27;Classe 1&#x27;, &#x27;diabete insulino-dipendente, miastenia, broncopneumopatia cronica ostruttiva, morbo di Crohn, colite ulcerosa, pancreatite, artrite reumatoide, insufficienza renale cronica I-II stadio&#x27;, &#x27;1&#x27;],
+      [&#x27;Classe 2&#x27;, &#x27;Alzheimer, cardiopatie ischemiche, dilatative e reumatiche (NYHA I-II), fibrosi polmonare, epatopatie croniche, lupus, spondilite anchilosante, artrite psoriasica, sarcoidosi, amiloidosi, trombocitemia, policitemia vera&#x27;, &#x27;2&#x27;],
+      [&#x27;Classe 3&#x27;, &#x27;Parkinson, sclerosi multipla, ictus (escluso TIA), aneurisma cerebrale o dell\&#x27;aorta, embolia polmonare, cardiopatie NYHA III-IV, cirrosi epatica, anemia aplastica, trombosi della vena porta, insufficienza renale cronica III-IV stadio&#x27;, &#x27;3&#x27;],
+      [&#x27;Classe 4&#x27;, &#x27;tumori maligni, sclerosi laterale amiotrofica (SLA)&#x27;, &#x27;4&#x27;]],
+      n: &#x27;Sono indennizzate solo le patologie elencate nell\&#x27;Allegato 3, alla prima diagnosi.&#x27;}
+  };
+  TIPI.s3 = {t: TIPI.s1.t + &#x27; e interventi&#x27;, c: &#x27;&#x27;, r: [], n: &#x27;&#x27;};
+  function tipiHtml(k){
+    if(k === &#x27;s3&#x27;) return tipiHtml(&#x27;s1&#x27;) + tipiHtml(&#x27;s2&#x27;);
+    var T = TIPI[k]; if(!T) return &#x27;&#x27;;
+    return &#x27;&lt;p style=&quot;margin-top:10px&quot;&gt;&lt;b&gt;&#x27; + T.t + &#x27;&lt;/b&gt;&lt;/p&gt;&lt;table class=&quot;t tipi&quot;&gt;&lt;thead&gt;&lt;tr&gt;&lt;th style=&quot;width:24%&quot;&gt;Tipologia&lt;/th&gt;&lt;th&gt;Che cosa comprende&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;&#x27; + T.c + &#x27;&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&#x27; +
+      T.r.map(function(x){ return &#x27;&lt;tr&gt;&lt;td&gt;&lt;b&gt;&#x27; + x[0] + &#x27;&lt;/b&gt;&lt;/td&gt;&lt;td&gt;&#x27; + x[1] + &#x27;&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;&#x27; + x[2] + &#x27;&lt;/td&gt;&lt;/tr&gt;&#x27;; }).join(&#x27;&#x27;) + &#x27;&lt;/tbody&gt;&lt;/table&gt;&lt;p class=&quot;nota&quot;&gt;&#x27; + T.n + &#x27;&lt;/p&gt;&#x27;;
+  }
+  window.tipiSm = tipiHtml;
   var INFO = {
     s1:{cosa:[&#x27;Un indennizzo fisso quando una lesione deriva da infortunio o da malattia: l\&#x27;importo è predefinito e non dipende dalle spese sostenute.&#x27;,&#x27;Le lesioni sono raggruppate in 7 cluster (classi da 0 a 6): a ciascuno corrisponde una percentuale fissa del massimale.&#x27;,&#x27;Include l\&#x27;assistenza domiciliare di supporto alla riabilitazione.&#x27;],
         chi:&#x27;Maggiorenni fino a 75 anni di età assicurativa.&#x27;, fisco:&#x27;Premio detraibile al 19%, fino a 530 € l\&#x27;anno insieme agli altri premi rischio morte e invalidità.&#x27;,
@@ -2759,6 +2794,7 @@ function prem(sol, pkg, f){
       return &#x27;&lt;div class=&quot;pg&quot;&gt;&#x27; + shHead(SOLD[k][0] + &#x27; · &lt;em&gt;&#x27; + SOLD[k][1] + &#x27;&lt;/em&gt;&#x27;, &#x27;Semplice con Alleanza · scheda della soluzione&#x27; + (PI.length &lt; 5 ? (PI.length === 1 ? &#x27; · pacchetto &#x27; : &#x27; · pacchetti &#x27;) + PN.join(&#x27;, &#x27;) : &#x27;&#x27;), nome) +
         shSec(&#x27;Che cosa copre&#x27;, &#x27;&lt;ul class=&quot;chk&quot;&gt;&#x27; + I.cosa.map(function(t){ return &#x27;&lt;li&gt;&#x27; + t + &#x27;&lt;/li&gt;&#x27;; }).join(&#x27;&#x27;) + &#x27;&lt;/ul&gt;&#x27;) +
         shSec(&#x27;Quanto paga&#x27;, paga(k), &#x27;wide&#x27;) +
+        (TIPI[k] ? shSec(&#x27;Che cosa è indennizzato&#x27;, tipiHtml(k), &#x27;wide&#x27;) : &#x27;&#x27;) +
         (costi ? shSec(&#x27;Quanto costa&#x27;, costa(k), &#x27;wide&#x27;) : &#x27;&#x27;) +
         shSec(&#x27;Chi può assicurarsi&#x27;, &#x27;&lt;p&gt;&#x27; + I.chi + &#x27;&lt;/p&gt;&#x27;) +
         shSec(&#x27;Da quando vale&#x27;, tempi) +
@@ -2811,7 +2847,7 @@ function prem(sol, pkg, f){
       if(visti[chiave]){ rimandi.push(SOLD[k][1] + &#x27; &#x27; + ch[k].map(function(x){ return PKG[x.n]; }).join(&#x27;/&#x27;) + &#x27;: indennizzi come nella &#x27; + visti[chiave] + &#x27;.&#x27;); return &#x27;&#x27;; }
       if(lab) visti[chiave] = lab;
       var x0 = ch[k][0], tit = !ig.on ? &#x27;, pacchetto &#x27; + ch[k].map(function(x){ return PKG[x.n]; }).join(&#x27; e &#x27;) : (ch[k].length &gt; 1 ? (nuovo ? &#x27;: si aggiunge&#x27; : &#x27;: cambia il pacchetto&#x27;) : (x0.o &lt; 0 ? &#x27;: si aggiunge, pacchetto &#x27; + PKG[x0.n] : &#x27;: da &#x27; + PKG[x0.o] + &#x27; a &#x27; + PKG[x0.n]));
-      return shSec(pre + SOLD[k][1] + tit, &#x27;&lt;p&gt;&#x27; + INFO[k].cosa.slice(0, 2).join(&#x27; &#x27;) + &#x27;&lt;/p&gt;&#x27; + tabella(k) + &#x27;&lt;p class=&quot;nota&quot;&gt;&#x27; + (!ig.on ? &#x27;Indennizzi del pacchetto scelto.&#x27; : (nuovo ? &#x27;Indennizzi del pacchetto che si aggiunge.&#x27; : &#x27;A sinistra gli indennizzi di oggi (come in polizza), a destra quelli dopo l\&#x27;integrazione.&#x27;)) + &#x27;&lt;/p&gt;&#x27;, &#x27;wide p2&#x27;);
+      return shSec(pre + SOLD[k][1] + tit, &#x27;&lt;p&gt;&#x27; + INFO[k].cosa.slice(0, 2).join(&#x27; &#x27;) + &#x27;&lt;/p&gt;&#x27; + tabella(k) + tipiHtml(k) + &#x27;&lt;p class=&quot;nota&quot;&gt;&#x27; + (!ig.on ? &#x27;Indennizzi del pacchetto scelto.&#x27; : (nuovo ? &#x27;Indennizzi del pacchetto che si aggiunge.&#x27; : &#x27;A sinistra gli indennizzi di oggi (come in polizza), a destra quelli dopo l\&#x27;integrazione.&#x27;)) + &#x27;&lt;/p&gt;&#x27;, &#x27;wide p2&#x27;);
     });
     sez = sez.filter(Boolean);
     return [shSec(pre + (ig.on ? &#x27;Integrazione della polizza in corso&#x27; : &#x27;Nuova polizza&#x27;), tab + nota + sint + (rimandi.length ? &#x27;&lt;p class=&quot;nota&quot;&gt;&#x27; + rimandi.join(&#x27; &#x27;) + &#x27;&lt;/p&gt;&#x27; : &#x27;&#x27;), &#x27;wide p1&#x27;)].concat(sez);
@@ -3722,6 +3758,16 @@ window.__salCifre = function(v){
 };
 
 mostra();
+})();
+&lt;/script&gt;
+&lt;script id=&quot;sm-tipi-js&quot;&gt;
+(function(){
+  function fill(){
+    var box = document.getElementById(&#x27;smTipi&#x27;); if(!box || !window.tipiSm) return;
+    var nm = {s1: &#x27;Soluzione 1 – Lesioni: che cosa è indennizzato&#x27;, s2: &#x27;Soluzione 2 – Interventi chirurgici: che cosa è indennizzato&#x27;, s5: &#x27;Soluzione 5 – Grandi cure: le patologie assicurate&#x27;};
+    box.innerHTML = [&#x27;s1&#x27;, &#x27;s2&#x27;, &#x27;s5&#x27;].map(function(k){ return &#x27;&lt;details class=&quot;acc&quot;&gt;&lt;summary&gt;&#x27; + nm[k] + &#x27;&lt;/summary&gt;&lt;div class=&quot;body&quot;&gt;&#x27; + window.tipiSm(k).replace(/&lt;table/g, &#x27;&lt;div class=&quot;tbl-wrap&quot;&gt;&lt;table&#x27;).replace(/&lt;\/table&gt;/g, &#x27;&lt;/table&gt;&lt;/div&gt;&#x27;) + &#x27;&lt;/div&gt;&lt;/details&gt;&#x27;; }).join(&#x27;&#x27;);
+  }
+  if(document.readyState === &#x27;loading&#x27;) document.addEventListener(&#x27;DOMContentLoaded&#x27;, fill); else fill();
 })();
 &lt;/script&gt;
 &lt;/body&gt;
