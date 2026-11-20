@@ -13426,8 +13426,8 @@ function copertina(l, cliente, spie){
   return '<section class="cv"><div class="rule"></div><div class="br"><span><b>DASHBOARD</b> CONSULENZA</span><span>Documento a scopo illustrativo</span></div>' +
     '<div class="body"><div class="ey">' + (spie ? 'Guida alle soluzioni' : 'Proposta personalizzata') + '</div><h1>' + (spie ? 'Come <em>funziona</em>' : 'La tua <em>proposta</em>') + '</h1>' +
     (cliente ? '<div class="per">Per <b>' + esc(cliente) + '</b></div>' : '') +
-    '<p class="desc">' + (spie ? 'Le soluzioni di cui abbiamo parlato, spiegate una per una: a che cosa servono, come funzionano e che cosa è utile sapere. Nessun importo: il preventivo si costruisce insieme.' : 'Le soluzioni di protezione e di risparmio pensate insieme, ciascuna con le scelte fatte durante l\'incontro. Ogni sezione riporta le proprie condizioni e avvertenze.') + '</p>' +
-    '<div class="tot"><b>' + l.length + '</b><span>' + (l.length > 1 ? 'soluzioni' : 'soluzione') + '<br>in un unico piano</span></div></div>' +
+    '<p class="desc">' + (l.length > 1 ? (spie ? 'Le soluzioni di cui abbiamo parlato, spiegate una per una: a che cosa servono, come funzionano e che cosa è utile sapere. Nessun importo: il preventivo si costruisce insieme.' : 'Le soluzioni di protezione e di risparmio pensate insieme, ciascuna con le scelte fatte durante l\'incontro. Ogni sezione riporta le proprie condizioni e avvertenze.') : (spie ? 'La soluzione di cui abbiamo parlato, spiegata passo per passo: a che cosa serve, come funziona e che cosa è utile sapere. Nessun importo: il preventivo si costruisce insieme.' : 'La soluzione pensata insieme, con le scelte fatte durante l\'incontro, le sue condizioni e le avvertenze.')) + '</p>' +
+    (l.length > 1 ? '<div class="tot"><b>' + l.length + '</b><span>soluzioni<br>in un unico piano</span></div>' : '') + '</div>' +
     '<div class="o1"></div><div class="o2"></div><div class="o3"></div>' +
     '<div class="idx"><div class="cl">In questo documento</div>' + l.map(function(v, i){
       var x = info(v);
