@@ -13156,7 +13156,7 @@ function confDi(v){
       if(c.t === 'seg'){ var b = $$('button', el).filter(attivo)[0]; if(b) val = etichetta(b, c); }
       else if(c.t === 'select') val = el.options[el.selectedIndex] ? el.options[el.selectedIndex].textContent : '';
       else if(c.t === 'range') val = valore(el.value, c);
-      else if(el.value) val = c.t === 'number' ? (+el.value).toLocaleString('it-IT') + (/€/.test(c.l) ? ' €' : '') : el.value;
+      else if(el.value) val = c.t === 'number' ? itNum(el.value) + (/€/.test(c.l) ? ' €' : '') : el.value;
       if(val && R.every(function(x){ return x[0] !== c.l; })) R.unshift([c.l.replace(/ \(€\)$/, ''), val]);
     });
   }catch(e){}
@@ -13344,12 +13344,13 @@ function riassunto(v){
     if(c.t === 'seg'){ var b = $$('button', el).filter(attivo)[0]; if(b) out.push(etichetta(b, c)); }
     else if(c.t === 'select'){ out.push(el.options[el.selectedIndex] ? el.options[el.selectedIndex].textContent : ''); }
     else if(c.t === 'range'){ out.push(valore(el.value, c)); }
-    else if(c.t === 'number' && el.value){ out.push((+el.value).toLocaleString('it-IT') + (/€/.test(c.l) ? ' €' : (/Età/.test(c.l) ? ' anni' : ''))); }
+    else if(c.t === 'number' && el.value){ out.push(itNum(el.value) + (/€/.test(c.l) ? ' €' : (/Età/.test(c.l) ? ' anni' : ''))); }
     else if(c.t === 'text' && el.value){ out.unshift(el.value); }
   });
   return out.filter(Boolean).join(' · ') || info(v)[2];
 }
-function valore(x, c){ var n = +x; return (c.m ? n.toLocaleString('it-IT') : n) + (c.u || ''); }
+function itNum(x){ x = +x; var neg = x < 0, t = (Math.round(Math.abs(x) * 100) / 100).toFixed(x % 1 ? 2 : 0).split('.'); if(t[1] === '00') t.pop(); return (neg ? '-' : '') + t[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.') + (t[1] ? ',' + t[1].replace(/0$/, x % 1 ? '0' : '') : ''); }
+function valore(x, c){ var n = +x; return (c.m ? String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.') : n) + (c.u || ''); }
 function avvisi(){
   lista.forEach(function(v){
     var d = docDi(v), t = (AVVISI[v] || []).map(function(s){ var e = d.querySelector(s); return e && e.style.display === 'block' ? e.textContent.trim() : ''; }).filter(Boolean).join(' ');
@@ -13528,7 +13529,7 @@ function chiave(v){
     if(c.t === 'seg'){ var b = $$('button', el).filter(attivo)[0]; if(b) out.push(etichetta(b, c)); }
     else if(c.t === 'select'){ out.push(el.options[el.selectedIndex] ? el.options[el.selectedIndex].textContent : ''); }
     else if(c.t === 'range'){ out.push((c.l.replace(/ dell'assicurato/i, '')) + ' ' + valore(el.value, c)); }
-    else if(c.t === 'number' && el.value && +el.value > 0){ out.push(c.l.replace(/\s*\(€\)/, '') + ' ' + (+el.value).toLocaleString('it-IT') + (/€/.test(c.l) ? ' €' : (/Età/.test(c.l) ? ' anni' : ''))); }
+    else if(c.t === 'number' && el.value && +el.value > 0){ out.push(c.l.replace(/\s*\(€\)/, '') + ' ' + itNum(el.value) + (/€/.test(c.l) ? ' €' : (/Età/.test(c.l) ? ' anni' : ''))); }
   });
   if(v === 'peramore' || v === 'persempre') out = out.filter(function(t){ return !/^(Base|Light|Full)$/.test(t) || v === 'persempre'; });
   out = out.filter(function(t){ return t !== 'Nuova polizza'; });
@@ -13539,7 +13540,7 @@ function cifreDi(v){
   try{ var w = frame(area(v)).contentWindow; return area(v) === 'sal' ? (w.__salCifre ? w.__salCifre(v) : null) : (w.__invCifre ? w.__invCifre(v) : null); }catch(e){ return null; }
 }
 function numero(t){ var m = /([\d.]+(?:,\d+)?)/.exec(String(t || '')); return m ? parseFloat(m[1].replace(/\./g, '').replace(',', '.')) : 0; }
-function eurK(x){ return x.toLocaleString('it-IT', {minimumFractionDigits: x % 1 ? 2 : 0, maximumFractionDigits: 2}) + ' €'; }
+function eurK(x){ var neg = x < 0, t = (Math.round(Math.abs(x) * 100) / 100).toFixed(x % 1 ? 2 : 0).split('.'); return (neg ? '-' : '') + t[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.') + (t[1] ? ',' + t[1] : '') + ' €'; }
 function pianoInCifre(l){
   var schede = [], mese = 0, unico = 0, quotare = false;
   l.forEach(function(v){
@@ -13555,7 +13556,7 @@ function pianoInCifre(l){
       (c.acc && c.acc.length ? '<ul>' + c.acc.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') + '</div>');
   });
   if(!schede.length) return '';
-  var eur = function(x){ return x.toLocaleString('it-IT', {minimumFractionDigits: x % 1 ? 2 : 0, maximumFractionDigits: 2}) + ' €'; };
+  var eur = function(x){ return itNum(x) + ' €'; };
   var tot = (mese ? '<div><span>Impegno mensile complessivo</span><b>' + eur(mese) + ' <small>al mese</small></b></div>' : '') +
             (unico ? '<div><span>Premi unici</span><b>' + eur(unico) + ' <small>una tantum</small></b></div>' : '');
   return '<div class="kpi"><div class="kt">Il piano in cifre</div><div class="kg n' + Math.min(schede.length, 4) + '">' + schede.join('') + '</div>' + (tot ? '<div class="ktot">' + tot + '</div>' : '') + '</div>';
