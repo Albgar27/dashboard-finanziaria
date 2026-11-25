@@ -13181,15 +13181,36 @@ function sezioniVarianti(h, altri, cols){
   var al = altri.map(function(x){ var q = document.createElement('div'); q.innerHTML = x || ''; return q; });
   var norm = function(x){ return String(x || '').replace(/\s(id|style)="[^"]*"/g, '').replace(/\s+/g, ' '); };
   var titolo = function(sec){ var h3 = sec.querySelector('h3'); return h3 ? h3.textContent.replace(/\s+/g, ' ').trim() : ''; };
+  var k0 = function(tit){ return /^(la proposta|il preventivo)/i.test(tit); };
   $$('.sh-sec', t).forEach(function(sec, k){
     var tit = titolo(sec);
-    if(k === 0 && /proposta|preventivo/i.test(tit)){ sec.parentNode.removeChild(sec); return; }
+    if(k === 0 && k0(tit)){ sec.parentNode.removeChild(sec); return; }
     var altre = al.map(function(q){ return $$('.sh-sec', q).filter(function(x){ return titolo(x) === tit; })[0] || null; });
+    sec.setAttribute('data-tb', tit);
     if(altre.every(function(x){ return x && norm(x.innerHTML) === norm(sec.innerHTML); })) return;
     var fr = document.createDocumentFragment();
-    altre.concat([sec]).forEach(function(x, i){ if(!x) return; var c = x.cloneNode(true), h3 = c.querySelector('h3'); if(h3) h3.textContent = tit + ' · ' + cols[i].nome; fr.appendChild(c); });
+    altre.concat([sec]).forEach(function(x, i){ if(!x) return; var c = x.cloneNode(true), h3 = c.querySelector('h3'); c.setAttribute('data-tb', tit); if(h3) h3.textContent = tit + ' · ' + cols[i].nome; fr.appendChild(c); });
     sec.parentNode.replaceChild(fr, sec);
   });
+  /* sezioni che esistono solo in alcune proposte (per esempio le esclusioni della garanzia infortuni della Full): si aggiungono, con il nome delle proposte */
+  var ultimo = function(tit){ var l = $$('[data-tb]', t).filter(function(x){ return x.getAttribute('data-tb') === tit; }); return l[l.length - 1] || null; };
+  var fatte = {};
+  al.forEach(function(q){
+    var prima = null;
+    $$('.sh-sec', q).forEach(function(x){
+      var tit = titolo(x);
+      if(k0(tit)) return;
+      var qui = ultimo(tit);
+      if(qui){ prima = qui; return; }
+      if(fatte[tit]) return; fatte[tit] = 1;
+      var chi = al.map(function(q2, i){ return $$('.sh-sec', q2).some(function(y){ return titolo(y) === tit; }) ? cols[i].nome : null; }).filter(Boolean);
+      var c = x.cloneNode(true), h3 = c.querySelector('h3'); c.setAttribute('data-tb', tit); if(h3) h3.textContent = tit + ' · ' + chi.join(' e ');
+      var dopo = prima || $$('[data-tb]', t).slice(-1)[0];
+      if(dopo) dopo.parentNode.insertBefore(c, dopo.nextSibling); else t.appendChild(c);
+      prima = c;
+    });
+  });
+  $$('[data-tb]', t).forEach(function(x){ x.removeAttribute('data-tb'); });
   return t.innerHTML;
 }
 /* tabella di confronto corta: in tabella solo quello che cambia, sotto in una riga quello che è uguale in tutte */
