@@ -799,6 +799,9 @@ ul.kv li.off{color:#8A929C}ul.kv li.off b,ul.kv li.off em{color:#8A929C}
 .pg.mx .sh-head .t em{font-style:normal;font-weight:700;color:#F2A65E}
 .pg.mx .sh-head .r{color:rgba(250,247,240,.72);text-align:right}
 .pg.mx .sh-head .r b{font-family:&#x27;Inter&#x27;,sans-serif;font-style:normal;font-weight:700;font-size:11pt;color:#fff;letter-spacing:0;text-transform:none}
+.pg .solo-dash,.sheet .solo-dash{display:none!important}
+.pg.mx .sh-sec&gt;h3[data-n]::before{content:attr(data-n)}
+.pg.mx .sh-mini b i{font-style:normal;color:#B0601F}
 .pg.mx .sh-mini{border:0;background:#F6F1E6;border-radius:8px;padding:6px 12px;margin-bottom:8px;align-items:center}
 .pg.mx .sh-mini::after{display:none}
 .pg.mx .sh-mini b{font-family:&#x27;Inter&#x27;,sans-serif;font-weight:700;font-size:10pt;color:#0B2036}
@@ -1390,7 +1393,7 @@ Stampa
   &lt;details class=&quot;acc&quot;&gt;&lt;summary&gt;Chi può assicurarsi&lt;/summary&gt;&lt;div class=&quot;body&quot;&gt;&lt;ul class=&quot;chk&quot;&gt;&lt;li&gt;Età assicurativa da 18 a 70 anni alla firma, e non oltre 75 anni alla scadenza.&lt;/li&gt;&lt;li&gt;BMI da 18,5 a meno di 40.&lt;/li&gt;&lt;li&gt;Serve il questionario sanitario; in base alle risposte può essere richiesta una visita medica.&lt;/li&gt;&lt;li&gt;Se l&#x27;assicurato è diverso dal contraente, serve il suo consenso scritto.&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;/details&gt;
   &lt;details class=&quot;acc&quot;&gt;&lt;summary&gt;Esclusioni della copertura principale&lt;/summary&gt;&lt;div class=&quot;body&quot;&gt;&lt;ul class=&quot;chk no&quot;&gt;&lt;li&gt;Delitto doloso del contraente o del beneficiario; partecipazione dell&#x27;assicurato a delitti dolosi.&lt;/li&gt;&lt;li&gt;Partecipazione attiva a guerre, terrorismo, disordini e operazioni militari; in alcuni casi anche quella non attiva.&lt;/li&gt;&lt;li&gt;Armi e incidenti nucleari; voli su mezzi non autorizzati o con pilota senza brevetto.&lt;/li&gt;&lt;li&gt;Guida senza patente (copertura attiva se scaduta da non più di 6 mesi).&lt;/li&gt;&lt;li&gt;Sport pericolosi e professioni a rischio non dichiarati alla firma.&lt;/li&gt;&lt;li&gt;Suicidio nei primi 2 anni (12 mesi dopo una riattivazione).&lt;/li&gt;&lt;/ul&gt;&lt;p style=&quot;margin-top:8px&quot;&gt;Salvo il delitto doloso, in questi casi si paga la riserva matematica al posto del capitale.&lt;/p&gt;&lt;/div&gt;&lt;/details&gt;
   &lt;details class=&quot;acc&quot;&gt;&lt;summary&gt;Esclusioni della versione Full&lt;/summary&gt;&lt;div class=&quot;body&quot;&gt;&lt;ul class=&quot;chk no&quot;&gt;&lt;li&gt;Corse e gare, con prove e allenamenti (salvo podismo, bocce, pesca, tiro, scherma e tennis).&lt;/li&gt;&lt;li&gt;Contaminazione nucleare o chimica, terremoti, eruzioni, inondazioni.&lt;/li&gt;&lt;li&gt;Ubriachezza oltre i limiti del Codice della strada, abuso di psicofarmaci o uso di stupefacenti.&lt;/li&gt;&lt;li&gt;Malaria, avvelenamenti, infezioni non causate dalle lesioni; interventi non resi necessari dall&#x27;infortunio.&lt;/li&gt;&lt;li&gt;Decesso avvenuto oltre un anno dall&#x27;infortunio.&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;/details&gt;
-  &lt;details class=&quot;acc&quot;&gt;&lt;summary&gt;Premi e costi&lt;/summary&gt;&lt;div class=&quot;body&quot;&gt;Premi annui costanti, anche in rate mensili (solo con addebito SDD) o semestrali; il primo premio annuo è dovuto per intero. Premio minimo 240 € l&#x27;anno; sconto del 10% per i donatori di sangue (almeno una donazione nei 6 mesi prima della firma), per tutta la durata. Nessun diritto di emissione; caricamento del 40% sui premi e 48 € l&#x27;anno sulla copertura principale. Se si interrompono i pagamenti, il contratto si risolve dopo 30 giorni.&lt;/div&gt;&lt;/details&gt;
+  &lt;details class=&quot;acc&quot;&gt;&lt;summary&gt;Premi e pagamenti&lt;/summary&gt;&lt;div class=&quot;body&quot;&gt;Premi annui costanti, anche in rate mensili (solo con addebito SDD) o semestrali; il primo premio annuo è dovuto per intero. Premio minimo 240 € l&#x27;anno; sconto del 10% per i donatori di sangue (almeno una donazione nei 6 mesi prima della firma), per tutta la durata. &lt;span class=&quot;solo-dash&quot;&gt;Nessun diritto di emissione; caricamento del 40% sui premi e 48 € l&#x27;anno sulla copertura principale.&lt;/span&gt; Se si interrompono i pagamenti, il contratto si risolve dopo 30 giorni.&lt;/div&gt;&lt;/details&gt;
  &lt;/div&gt;
 &lt;/section&gt;
 
@@ -2563,8 +2566,8 @@ function prem(sol, pkg, f){
     var res = $(&#x27;#smRes&#x27;);
     res.innerHTML = &#x27;&lt;div class=&quot;k&quot;&gt;Preventivo&#x27; + (nome ? &#x27; per &#x27; + esc(nome) : &#x27;&#x27;) + &#x27; · &#x27; + persone.length + (persone.length === 1 ? &#x27; persona&#x27; : &#x27; persone&#x27;) + &#x27;&lt;/div&gt;&lt;div class=&quot;v&quot;&gt;&lt;span id=&quot;smTot&quot;&gt;&lt;/span&gt; &lt;small&gt;al mese&lt;/small&gt;&lt;/div&gt;&#x27; + righeH +
       &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Premio annuo (12 mensilità)&lt;/span&gt;&lt;b id=&quot;smAnno&quot;&gt;&lt;/b&gt;&lt;/div&gt;&#x27; +
-      &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Diritti di emissione (una tantum)&lt;/span&gt;&lt;b&gt;10 €&lt;/b&gt;&lt;/div&gt;&#x27; +
-      &#x27;&lt;div class=&quot;row tot&quot;&gt;&lt;span&gt;Primo anno, diritti compresi&lt;/span&gt;&lt;b id=&quot;smPrimo&quot;&gt;&lt;/b&gt;&lt;/div&gt;&#x27; +
+      &#x27;&lt;div class=&quot;row solo-dash&quot;&gt;&lt;span&gt;Diritti di emissione (una tantum)&lt;/span&gt;&lt;b&gt;10 €&lt;/b&gt;&lt;/div&gt;&#x27; +
+      &#x27;&lt;div class=&quot;row tot solo-dash&quot;&gt;&lt;span&gt;Primo anno, diritti compresi&lt;/span&gt;&lt;b id=&quot;smPrimo&quot;&gt;&lt;/b&gt;&lt;/div&gt;&#x27; +
       rigaDetSm(lesAnno(persone), false) +
       (tot &gt; 0 ? &#x27;&lt;div class=&quot;pitch&quot;&gt;Pari a &lt;em&gt;&#x27; + (anno / 365).toLocaleString(&#x27;it-IT&#x27;, {minimumFractionDigits:2, maximumFractionDigits:2}) + &#x27; € al giorno&lt;/em&gt; per proteggere &#x27; + (persone.length === 1 ? &#x27;una persona&#x27; : &#x27;tutta la famiglia&#x27;) + &#x27;, con importi che conosci &lt;em&gt;prima&lt;/em&gt; che servano.&lt;/div&gt;&#x27; : &#x27;&lt;div class=&quot;empty&quot;&gt;Scegli almeno una soluzione: il preventivo si compone man mano.&lt;/div&gt;&#x27;) +
       (err ? &#x27;&lt;div class=&quot;warn&quot; style=&quot;background:#4A1E18;color:#F7D7D0;border-color:#E8806F&quot;&gt;Ci sono &#x27; + err + &#x27; vincoli da sistemare nel piano.&lt;/div&gt;&#x27; : &#x27;&#x27;) +
@@ -2781,7 +2784,7 @@ function prem(sol, pkg, f){
     }
     function costa(k){
       if(k === &#x27;s3&#x27;) return &#x27;&lt;table class=&quot;t&quot;&gt;&#x27; + th([&#x27;Pacchetto&#x27;].concat(PN)) + &#x27;&lt;tbody&gt;&#x27; + tr([&#x27;Al mese, per figlio&#x27;].concat(sub(PR.s3).map(function(v){ return eur(v); }))) + &#x27;&lt;/tbody&gt;&lt;/table&gt;&#x27;;
-      return &#x27;&lt;table class=&quot;t&quot;&gt;&#x27; + th([&#x27;Età&#x27;].concat(PN)) + &#x27;&lt;tbody&gt;&#x27; + FASCE.map(function(fa, f){ return tr([fa + &#x27; anni&#x27;].concat(sub(PR[k]).map(function(r){ return eur(r[f]); }))); }).join(&#x27;&#x27;) + &#x27;&lt;/tbody&gt;&lt;/table&gt;&lt;p class=&quot;nota&quot;&gt;Premio mensile per persona. Diritti di emissione 10 € una tantum; nessuna maggiorazione per il pagamento mensile.&lt;/p&gt;&#x27;;
+      return &#x27;&lt;table class=&quot;t&quot;&gt;&#x27; + th([&#x27;Età&#x27;].concat(PN)) + &#x27;&lt;tbody&gt;&#x27; + FASCE.map(function(fa, f){ return tr([fa + &#x27; anni&#x27;].concat(sub(PR[k]).map(function(r){ return eur(r[f]); }))); }).join(&#x27;&#x27;) + &#x27;&lt;/tbody&gt;&lt;/table&gt;&lt;p class=&quot;nota&quot;&gt;Premio mensile per persona; nessuna maggiorazione per il pagamento mensile.&lt;/p&gt;&#x27;;
     }
     var FONTI = &#x27;Fonti: Condizioni di assicurazione Semplice con Alleanza, Ed. 625 (30 giugno 2025); Guida ai prodotti Alleanza (9 febbraio 2026).&#x27;;
     var PI0 = PI;
@@ -2823,7 +2826,7 @@ function prem(sol, pkg, f){
       : &#x27;&lt;table class=&quot;t&quot;&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Assicurato&lt;/th&gt;&lt;th&gt;Soluzione&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;Pacchetto&lt;/th&gt;&lt;th class=&quot;n&quot;&gt;Premio al mese&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&#x27; + righeT.join(&#x27;&#x27;) + &#x27;&lt;/tbody&gt;&lt;/table&gt;&#x27;;
     var sint = ig.on ? &#x27;&lt;table class=&quot;t&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td&gt;Premio mensile di oggi&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;&#x27; + eur(oggiT) + &#x27;&lt;/td&gt;&lt;/tr&gt;&lt;tr class=&quot;hl&quot;&gt;&lt;td&gt;&lt;b&gt;Premio mensile con l\&#x27;integrazione&lt;/b&gt;&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;&lt;b&gt;&#x27; + eur(dopoT) + &#x27;&lt;/b&gt; (&#x27; + (dopoT - oggiT &gt;= 0 ? &#x27;+&#x27; : &#x27;−&#x27;) + eur(Math.abs(dopoT - oggiT)) + &#x27;)&lt;/td&gt;&lt;/tr&gt;&#x27; +
       (fine ? &#x27;&lt;tr&gt;&lt;td&gt;Scadenza del contratto&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;&#x27; + dataIt2(fine) + &#x27; (5 anni, tacito rinnovo)&lt;/td&gt;&lt;/tr&gt;&#x27; : &#x27;&#x27;) + &#x27;&lt;tr&gt;&lt;td&gt;Integrazione possibile&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;fino all\&#x27;ultima annualità del contratto&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&#x27;
-      : &#x27;&lt;table class=&quot;t&quot;&gt;&lt;tbody&gt;&lt;tr class=&quot;hl&quot;&gt;&lt;td&gt;&lt;b&gt;Premio mensile&lt;/b&gt;&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;&lt;b&gt;&#x27; + eur(dopoT) + &#x27;&lt;/b&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Premio annuo · diritti di emissione&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;&#x27; + eur(dopoT * 12) + &#x27; · 10 € una tantum&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Durata&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;5 anni, tacito rinnovo&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&#x27;;
+      : &#x27;&lt;table class=&quot;t&quot;&gt;&lt;tbody&gt;&lt;tr class=&quot;hl&quot;&gt;&lt;td&gt;&lt;b&gt;Premio mensile&lt;/b&gt;&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;&lt;b&gt;&#x27; + eur(dopoT) + &#x27;&lt;/b&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Premio annuo&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;&#x27; + eur(dopoT * 12) + &#x27;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Durata&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;5 anni, tacito rinnovo&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&#x27;;
     var nota = pers.some(function(p){ return [&#x27;s1&#x27;, &#x27;s2&#x27;, &#x27;s4&#x27;, &#x27;s5&#x27;, &#x27;s3&#x27;].some(function(k){ return p[&#x27;m&#x27; + k] &gt; 0 &amp;&amp; (p[&#x27;o&#x27; + k] == null ? -1 : p[&#x27;o&#x27; + k]) &gt;= 0; }); }) ? &#x27;&lt;p class=&quot;nota&quot;&gt;* Massimale di oggi come risulta in polizza, verificato dal consulente.&lt;/p&gt;&#x27; : &#x27;&#x27;;
     /* quanto paga: per ogni soluzione aggiunta o aumentata, pacchetto di oggi e pacchetto dopo affiancati */
     var cl = [0.5, 1, 5, 15, 30, 60, 100], cs = [1, 3, 10, 25], cg = [5, 10, 15, 20];
@@ -3071,7 +3074,7 @@ function prem(sol, pkg, f){
       (voucher &amp;&amp; sum ? &#x27;&lt;div class=&quot;row vou&quot;&gt;&lt;span&gt;Sconto voucher 20%, primi 12 mesi&lt;/span&gt;&lt;b&gt;− &#x27; + eur(sum * 0.2) + &#x27; al mese&lt;/b&gt;&lt;/div&gt;&#x27; +
         &#x27;&lt;div class=&quot;row tot&quot;&gt;&lt;span&gt;Primi 12 mesi, con voucher&lt;/span&gt;&lt;b&gt;&#x27; + eur(sum * 0.8) + &#x27; al mese&lt;/b&gt;&lt;/div&gt;&#x27; +
         &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Dal 13° mese&lt;/span&gt;&lt;b&gt;&#x27; + eur(sum) + &#x27; al mese&lt;/b&gt;&lt;/div&gt;&#x27; : &#x27;&#x27;) +
-      &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Diritti di emissione (una tantum, alla firma)&lt;/span&gt;&lt;b&gt;10 €&lt;/b&gt;&lt;/div&gt;&#x27; +
+      &#x27;&lt;div class=&quot;row solo-dash&quot;&gt;&lt;span&gt;Diritti di emissione (una tantum, alla firma)&lt;/span&gt;&lt;b&gt;10 €&lt;/b&gt;&lt;/div&gt;&#x27; +
       (fuori ? &#x27;&lt;div class=&quot;warn&quot; style=&quot;background:#4A1E18;color:#F7D7D0;border-color:#E8806F&quot;&gt;Ci sono età fuori dai limiti del prodotto.&lt;/div&gt;&#x27; : &#x27;&#x27;) +
       (quest ? &#x27;&lt;div class=&quot;mini&quot;&gt;Dai 18 anni serve il questionario sanitario.&lt;/div&gt;&#x27; : &#x27;&#x27;) +
       &#x27;&lt;div class=&quot;mini&quot;&gt;Massimale annuo di 500.000 € per assicurato. Simulazione non vincolante.&lt;/div&gt;&#x27;;
@@ -3630,13 +3633,15 @@ window.__salMix = function(inv, sal, cliente, opz){
       }
       var primoDiArea = true;
       A.items.forEach(function(it){
+        /* una nuova soluzione non comincia in fondo a una pagina già piena per metà: va sulla pagina dopo */
+        if(it.b &amp;&amp; cur.n &gt; 0 &amp;&amp; usato() &gt; 0.5) nuova(A.mini, A);
         var g = document.createElement(&#x27;div&#x27;); g.className = &#x27;mx-grp z-&#x27; + A.ar.replace(&#x27;a-&#x27;, &#x27;&#x27;); g.innerHTML = it.b + it.h;
         cur.inn.insertBefore(g, cur.foot); cur.n++;
         if(trabocca()){
           /* se sulla pagina resta almeno un quarto libero, la sezione si divide: una parte qui, il seguito sulla pagina dopo */
           if(cur.n &gt; 1){
             var libero = cur.inn.clientHeight - (cur.inn.scrollHeight - g.offsetHeight);
-            if(libero &gt; cur.inn.clientHeight * 0.22){
+            if(libero &gt; cur.inn.clientHeight * 0.22 &amp;&amp; g.offsetHeight &gt; cur.inn.clientHeight * 0.55){
               var g2 = dividi(g, trabocca);
               while(g2){
                 nuova(A.mini, A); cur.inn.insertBefore(g2, cur.foot); cur.n++; g = g2;
@@ -3682,9 +3687,23 @@ window.__salMix = function(inv, sal, cliente, opz){
     pgs.forEach(function(pg, i){ var f = $(&#x27;.sh-foot&#x27;, pg); if(f &amp;&amp; !$(&#x27;.pgn&#x27;, f)){ var t = document.createElement(&#x27;div&#x27;); t.className = &#x27;tx&#x27;; while(f.firstChild) t.appendChild(f.firstChild); f.appendChild(t); var n = document.createElement(&#x27;div&#x27;); n.className = &#x27;pgn&#x27;; f.appendChild(n); } });
     return box.innerHTML;
   }
+  /* sezioni numerate da 1 per ogni soluzione; le pagine che continuano una soluzione ne riportano il nome */
+  function numera(box){
+    var n = 0, sol = &#x27;&#x27;;
+    $$(&#x27;.pg&#x27;, box).forEach(function(pg){
+      var primo = $(&#x27;.mx-grp&#x27;, pg), inizia = primo &amp;&amp; $(&#x27;:scope &gt; .mx-sol&#x27;, primo), mini = $(&#x27;.sh-mini &gt; b&#x27;, pg);
+      if(mini &amp;&amp; sol &amp;&amp; !inizia &amp;&amp; !$(&#x27;.mx-cambio&#x27;, pg)) mini.innerHTML = mini.innerHTML.replace(/ · &lt;i&gt;.*$/, &#x27;&#x27;) + &#x27; · &lt;i&gt;&#x27; + esc(sol) + &#x27;, segue&lt;/i&gt;&#x27;;
+      $$(&#x27;.mx-sol &gt; b, .sh-sec &gt; h3&#x27;, pg).forEach(function(el){
+        if(el.tagName.toLowerCase() === &#x27;b&#x27;){ sol = el.textContent.trim(); n = 0; return; }
+        if(el.parentNode.classList.contains(&#x27;segue&#x27;)) return;
+        el.setAttribute(&#x27;data-n&#x27;, ++n);
+      });
+    });
+  }
   try{
     if(COMP){
       box.innerHTML = pagN(AREE);
+      numera(box);
       rientra(box);
       var pgsC = $$(&#x27;.pg&#x27;, box);
       pgsC.forEach(function(pg, i){ var n = $(&#x27;.pgn&#x27;, pg); if(n) n.textContent = (i + 1) + &#x27; / &#x27; + pgsC.length; });
@@ -3715,6 +3734,7 @@ window.__salMix = function(inv, sal, cliente, opz){
       return box.innerHTML;
     });
     box.innerHTML = parti.join(&#x27;&#x27;);
+    numera(box);
     rientra(box);
     var pgs = $$(&#x27;.pg&#x27;, box);
     pgs.forEach(function(pg, i){ var n = $(&#x27;.pgn&#x27;, pg); if(n) n.textContent = (i + 1) + &#x27; / &#x27; + pgs.length; });
@@ -11520,12 +11540,14 @@ function chiave(v){
     else if(c.t === 'number' && el.value && +el.value > 0){ out.push(c.l.replace(/\s*\(€\)/, '') + ' ' + (+el.value).toLocaleString('it-IT') + (/€/.test(c.l) ? ' €' : (/Età/.test(c.l) ? ' anni' : ''))); }
   });
   if(v === 'peramore' || v === 'persempre') out = out.filter(function(t){ return !/^(Base|Light|Full)$/.test(t) || v === 'persempre'; });
+  out = out.filter(function(t){ return t !== 'Nuova polizza'; });
   return out.filter(Boolean);
 }
 function cifreDi(v){
   try{ var w = frame(area(v)).contentWindow; return area(v) === 'sal' ? (w.__salCifre ? w.__salCifre(v) : null) : (w.__invCifre ? w.__invCifre(v) : null); }catch(e){ return null; }
 }
 function numero(t){ var m = /([\d.]+(?:,\d+)?)/.exec(String(t || '')); return m ? parseFloat(m[1].replace(/\./g, '').replace(',', '.')) : 0; }
+function eurK(x){ return x.toLocaleString('it-IT', {minimumFractionDigits: x % 1 ? 2 : 0, maximumFractionDigits: 2}) + ' €'; }
 function pianoInCifre(l){
   var schede = [], mese = 0, unico = 0, quotare = false;
   l.forEach(function(v){
@@ -11534,7 +11556,7 @@ function pianoInCifre(l){
     if(c.unico) unico += c.unico;
     var TIT = {smart: 'Accumulo', valore: 'Investimento', oro: 'Investimento prudente', persempre: 'Copertura non autosufficienza', peramore: 'Copertura vita', semplice: 'Copertura infortuni e malattia', wsalute: 'Copertura sanitaria'};
     schede.push('<div class="kc"><div class="kh"><b>' + (TIT[v] || info(v)[2]) + '</b><em>' + info(v)[1] + '</em></div>' +
-      (c.premio ? '<div class="kp"><span>Premio complessivo</span><b>' + esc(c.premio) + (c.unita ? ' <small>' + esc(c.unita) + '</small>' : '') + '</b></div>' : '') +
+      (c.premio ? '<div class="kp"><span>Premio complessivo</span><b>' + esc(/^\s*[\d.]+(,\d+)?\s*€\s*$/.test(c.premio) ? eurK(numero(c.premio)) : c.premio) + (c.unita ? ' <small>' + esc(c.unita) + '</small>' : '') + '</b></div>' : '') +
       '<div class="ko"><span>' + (area(v) === 'inv' && !/protezione/.test(c.copNota) ? (v === 'smart' ? 'Combinazione' : (v === 'oro' ? 'Investimento' : 'Combinazione')) : 'Copertura') + '</span><b>' + esc(c.cop) + (c.copU ? ' <small>' + esc(c.copU) + '</small>' : '') + '</b><p>' + esc(c.copNota) + '</p></div>' +
       (c.acc && c.acc.length ? '<ul>' + c.acc.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') + '</div>');
   });
@@ -11711,7 +11733,7 @@ function monta(fr, doc, anteprima, poi){
         /* il contenuto scalato esce dal flusso: la pagina resta esattamente della sua altezza e Safari
            non crea pagine in più per quello che sporge (anche se nascosto) */
         var pg = pgi.parentNode, cs = getComputedStyle(pg);
-        pg.style.position = 'relative'; pg.style.overflow = 'hidden';
+        pg.style.position = 'relative'; pg.style.overflow = 'hidden'; pg.style.contain = 'strict';
         pgi.style.position = 'absolute'; pgi.style.top = cs.paddingTop; pgi.style.left = cs.paddingLeft; pgi.style.margin = '0';
       }); });
       /* nessun salto di pagina dopo l'ultima pagina */
@@ -11722,6 +11744,12 @@ function monta(fr, doc, anteprima, poi){
     };
     adatta2();
     if(d.fonts && d.fonts.ready) d.fonts.ready.then(adatta2);
+    /* numeri di pagina sull'intero documento: contano anche la copertina e la pagina del piano */
+    var prima = $$('.cv, .intro', d).length;
+    if(prima){
+      var pgn = []; $$('.host', d).forEach(function(hh){ pgn = pgn.concat($$('.pg', hh.shadowRoot)); });
+      pgn.forEach(function(pg, i){ var n = pg.querySelector('.pgn'); if(n) n.textContent = (prima + i + 1) + ' / ' + (prima + pgn.length); });
+    }
     if(anteprima){
       var scala = Math.min(1, (fr.clientWidth - 30) / 794);
       d.documentElement.style.zoom = scala;
