@@ -14119,7 +14119,7 @@ var RED = {'15': 14000, '28': 22000, '50': 38000, '99': 60000};
 var anno = new Date().getFullYear();
 var eta0 = +Q.eta > 17 && +Q.eta < 70 ? +Q.eta : 37;
 var P = {tab: 'piano', lav: 'dip', eta: eta0, etaP: 67, red: RED[Q.red] || (+Q.red > 1000 ? +Q.red : 30000), contr: +Q.pip > 0 ? +Q.pip : 1200,
-  dat: 0, bus: 0, tfr: true, comp: 'lc', r: 3, ltc: true, add: 2, infl: 2, anni: 30};
+  dat: 0, bus: 0, tfr: true, comp: 'lc', r: 3, ltc: true, add: 0, infl: 2, anni: 30};
 P.anni = Math.max(1, P.etaP - P.eta);
 var DEDUC = 5300, TFR_Q = 0.0691;
 /* ---------- dati ufficiali ---------- */
@@ -14146,6 +14146,11 @@ function esc(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(
 /* IRPEF 2026 (L. 199/2025): 23% fino a 28.000 €, 33% fino a 50.000 €, 43% oltre */
 function marginale(red){ return red <= 28000 ? 0.23 : (red <= 50000 ? 0.33 : 0.43); }
 function irpef(red){ return Math.min(red, 28000) * 0.23 + Math.max(0, Math.min(red, 50000) - 28000) * 0.33 + Math.max(0, red - 50000) * 0.43; }
+/* reddito imponibile IRPEF: per i dipendenti il lordo meno i contributi INPS a carico del lavoratore (9,19%) */
+var INPS_DIP = 0.0919;
+function imponibile(red){ return P.lav === 'dip' ? red * (1 - INPS_DIP) : red; }
+/* IRPEF risparmiata con la deduzione: differenza esatta, anche quando la deduzione scavalca uno scaglione */
+function rispIrpef(red, ded){ var i = imponibile(red); return irpef(i) - irpef(Math.max(0, i - ded)); }
 function aliqPrest(n){ return n <= 15 ? 0.15 : Math.max(0.09, 0.15 - 0.003 * (n - 15)); }
 function dip(){ return P.lav === 'dip'; }
 function rendDi(age){ if(P.comp === 'lib') return P.r; if(P.comp === 'lc') return age <= 49 ? COMP.azi.m10 : (age <= 59 ? COMP.bil.m10 : COMP.gar.m10); return COMP[P.comp].m10; }
@@ -14157,8 +14162,9 @@ function calc(){
   P.anni = Math.max(1, P.etaP - P.eta);
   var n = P.anni, car = P.ltc ? 0.045 : 0.03, red = P.red;
   var C = P.contr, B = dip() ? red * P.bus / 100 : 0, D = dip() ? red * P.dat / 100 : 0, T = dip() && P.tfr ? red * TFR_Q : 0;
-  var ded = P.lav === 'for' ? 0 : Math.min(C + B + D, DEDUC), m = marginale(red), aliq = P.lav === 'for' ? 0 : m + P.add / 100;
-  var risp = ded * aliq, versAnno = C + B + D + T, rows = [], V = 0, VV = 0, vers = 0;
+  var ded = P.lav === 'for' ? 0 : Math.min(C + B + D, DEDUC), m = marginale(imponibile(red));
+  var risp = P.lav === 'for' ? 0 : rispIrpef(red, ded) + ded * P.add / 100, aliq = ded > 0 ? risp / ded : 0;
+  var versAnno = C + B + D + T, rows = [], V = 0, VV = 0, vers = 0;
   for(var t = 1; t <= n; t++){
     var age = P.eta + t - 1, r = rendDi(age) / 100;
     V = V * (1 + r) + versAnno * (1 - car); vers += versAnno;
@@ -14176,7 +14182,7 @@ function calcTfr(){
   var n = P.anni, T = P.red * TFR_Q, D = P.red * P.dat / 100, car = P.ltc ? 0.045 : 0.03, al = aliqPrest(n);
   var V = 0, sF = [], A = 0, sA = [], rAz = (0.015 + 0.75 * P.infl / 100) * 0.83;
   for(var t = 1; t <= n; t++){ V = V * (1 + rendDi(P.eta + t - 1) / 100) + (T + D) * (1 - car); sF.push(V); A = A * (1 + rAz) + T; sA.push(A); }
-  var fondoNet = V - al * (T + Math.min(D, DEDUC)) * n, media = P.red ? irpef(P.red) / P.red : 0.23, azNet = A - media * T * n;
+  var fondoNet = V - al * (T + Math.min(D, DEDUC)) * n, media = P.red ? irpef(imponibile(P.red)) / imponibile(P.red) : 0.23, azNet = A - media * T * n;
   return {n: n, T: T, D: D, fondo: V, fondoNet: fondoNet, al: al, rAz: rAz, az: A, azNet: azNet, media: media, diff: fondoNet - azNet, sF: sF, sA: sA};
 }
 /* ---------- grafici ---------- */
@@ -14344,7 +14350,7 @@ function stampa(){
   w.document.write('<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Alleata Previdenza</title><style>@page{size:A4;margin:18mm}body{font-family:Arial,Helvetica,sans-serif;color:#1C232B;font-size:10.5pt}h1{font-size:18pt;color:#0B2036;margin:0 0 2mm}h2{font-size:11pt;color:#C4701F;text-transform:uppercase;letter-spacing:.08em;margin:8mm 0 2mm}table{width:100%;border-collapse:collapse}td{padding:2mm 0;border-bottom:1px solid #E3DAC4}.n{font-size:8pt;color:#6b7680;margin-top:10mm;line-height:1.5}</style></head><body>' +
     '<h1>Alleata Previdenza</h1><div>' + esc(cl) + (cl ? ' · ' : '') + P.eta + ' anni oggi · pensione a ' + P.etaP + ' · reddito lordo ' + e0(P.red) + ' · ' + nomeComp() + '</div>' +
     '<h2>I versamenti</h2><table>' + r('Contributo volontario annuo', e0(c.C)) + (dip() ? r('Contributo in busta e del datore, all\'anno', e0(c.B + c.D)) + r('TFR nel fondo, all\'anno', c.T ? e0(c.T) : 'no') : '') + r('Versato in ' + c.n + ' anni', e0(c.vers)) + '</table>' +
-    '<h2>Il fisco</h2><table>' + r('Dedotto ogni anno', e0(c.ded)) + r('Rimborso IRPEF e addizionali ogni anno', e0(c.risp)) + r('Tasse risparmiate in ' + c.n + ' anni', e0(c.rispTot)) + '</table>' +
+    '<h2>Il fisco</h2><table>' + r('Dedotto ogni anno', e0(c.ded)) + r(P.add ? 'Rimborso IRPEF e addizionali ogni anno' : 'Rimborso IRPEF ogni anno', e0(c.risp)) + r('Tasse risparmiate in ' + c.n + ' anni', e0(c.rispTot)) + '</table>' +
     '<h2>Alla pensione</h2><table>' + r('Posizione accumulata', e0(c.lordo)) + r('Tassa sulla prestazione', pc(c.al * 100)) + r('Netto', e0(c.netto)) + r('Tutto in rendita, al mese (stima)', e0(c.rendM)) + r('Oppure metà in capitale', e0(c.meta) + ' + ' + e0(c.rendM50) + ' al mese') + '</table>' +
     (dip() && P.tfr ? '<h2>TFR</h2><table>' + r('Nel fondo pensione, netto', e0(t.fondoNet)) + r('Lasciato in azienda, netto', e0(t.azNet)) + r('Differenza', e0(t.diff)) + '</table>' : '') +
     '<p class="n">Simulazione illustrativa e non vincolante. Rendimenti netti dei comparti dalla Nota informativa (in vigore dal 31/03/2026): i rendimenti passati non sono indicativi di quelli futuri. Valori al netto dei costi previsti dal contratto. IRPEF 2026; prestazione tassata dal 15% al 9% sulla parte dedotta e sul TFR; rendita stimata su circa ' + Math.round(c.ar) + ' anni. TFR in azienda rivalutato all\'1,5% più il 75% dell\'inflazione (' + pc(P.infl) + '), imposta 17% sulla rivalutazione. Condizioni complete nella Nota informativa, nel Regolamento e nelle condizioni di assicurazione.</p><script>setTimeout(function(){ print(); }, 400);<\/script></body></html>');
@@ -14397,7 +14403,7 @@ window.__pip = {
     if(dip()) scelte.push(['TFR', P.tfr ? 'Nel fondo' : 'Non conferito', P.tfr ? 'circa ' + eu(c.T) + ' l\'anno' : ''], ['Contributo del datore', c.D ? eu(c.D) + ' l\'anno' : 'nessuno', c.D ? pc(P.dat) + ' della retribuzione' : '']);
     scelte.push(['Accessoria LTC', P.ltc ? 'Inclusa' : 'Non inclusa', P.ltc ? 'se si perde l\'autosufficienza' : '']);
     S.push({t: 'Le scelte', p: 1, parti: [['cifre', scelte]]});
-    S.push({t: 'Il vantaggio fiscale, ogni anno', p: 1, parti: [['two', [['tab', [['Contributi dedotti dal reddito', eu(c.ded)], ['IRPEF e addizionali risparmiate ogni anno', eu(c.risp)], ['In ' + c.n + ' anni', eu(c.rispTot)]]]].concat(c.oltre ? [['nota', 'Oltre 5.300 € l\'anno il contributo non si deduce.']] : []), [['punti', [['Lo Stato restituisce', P.lav === 'for' ? 'Nel regime forfettario i contributi non si deducono: restano i vantaggi sulla tassazione dei rendimenti e della prestazione.' : 'Con il ' + Math.round(c.aliq * 100) + '% di aliquota, ogni anno tornano ' + eu(c.risp) + ' con la dichiarazione dei redditi.']]]]]]});
+    S.push({t: 'Il vantaggio fiscale, ogni anno', p: 1, parti: [['two', [['tab', [['Contributi dedotti dal reddito', eu(c.ded)], [P.add ? 'IRPEF e addizionali risparmiate ogni anno' : 'IRPEF risparmiata ogni anno', eu(c.risp)], ['In ' + c.n + ' anni', eu(c.rispTot)]]]].concat(c.oltre ? [['nota', 'Oltre 5.300 € l\'anno il contributo non si deduce.']] : []), [['punti', [['Lo Stato restituisce', P.lav === 'for' ? 'Nel regime forfettario i contributi non si deducono: restano i vantaggi sulla tassazione dei rendimenti e della prestazione.' : 'Con il ' + Math.round(c.aliq * 100) + '% di aliquota, ogni anno tornano ' + eu(c.risp) + ' con la dichiarazione dei redditi.']]]]]]});
     S.push({t: 'Alla pensione', p: 1, parti: [['tab', [['Versato in ' + c.n + ' anni (tu, datore, TFR)', eu(c.vers)], ['Posizione accumulata', eu(c.lordo)], ['Tassa sulla prestazione', pc(c.al * 100)], ['Netto alla pensione', eu(c.netto)], ['Tutto in rendita, al mese (stima)', eu(c.rendM)], ['Oppure metà in capitale', eu(c.meta) + ' + ' + eu(c.rendM50) + ' al mese']]], ['nota', 'Rendita stimata su circa ' + Math.round(c.ar) + ' anni di vita attesa: l\'importo vero dipende dai coefficienti del contratto.']]});
     if(dip() && P.tfr) S.push({t: 'Il TFR: nel fondo o in azienda', p: comp ? 2 : 1, parti: [['tab', [['TFR di ogni anno (6,91% del reddito)', eu(t.T)], ['Nel fondo pensione, netto alla pensione', eu(t.fondoNet)], ['Lasciato in azienda, netto', eu(t.azNet)], ['Differenza', eu(t.diff)]]], ['nota', 'In azienda il TFR si rivaluta dell\'1,5% più il 75% dell\'inflazione (' + pc(P.infl) + '), con imposta del 17%, ed è tassato all\'aliquota media IRPEF (circa ' + pc(t.media * 100) + ').' + (t.D ? ' Nel fondo è contato anche il contributo del datore.' : '')]]});
     if(comp){ S.push({t: 'Come funziona', p: 2, parti: [['punti', COME]]}); S.push({t: 'I comparti: rendimenti netti medi annui', p: 2, parti: [['tab', compRighe()]]}); S.push({t: 'Da sapere', p: 3, parti: [['punti', SAPERE]]}); }
