@@ -13930,7 +13930,7 @@ function sost(){ return ST.sost != null ? ST.sost : (ST.lav === 'autonomo' ? 50 
 function calc67(){
   var anni = Math.max(1, 67 - ST.eta), mens = ST.red / 13, pens = ST.red * sost() / 100 / 13, gap = Math.max(0, mens - pens), r = ST.rend / 100;
   var capPip = ST.pip ? fv(ST.pip / 12, anni, r) : 0, rendPip = capPip / (20 * 13), gapRes = Math.max(0, gap - rendPip), serve = gapRes * 13 * 20;
-  var rata = serve ? pmt(serve, anni, r) : 0, ded = Math.min(rata * 12 + ST.pip, 5300), risp = ded * ST.aliq;
+  var rata = serve ? pmt(serve, anni, r) : 0, ded = Math.min(rata * 12 + ST.pip, 5300), irM = function(x){ return Math.min(x, 28000) * 0.23 + Math.max(0, Math.min(x, 50000) - 28000) * 0.33 + Math.max(0, x - 50000) * 0.43; }, risp = irM(ST.red) - irM(Math.max(0, ST.red - ded));
   return {anni: anni, mens: mens, pens: pens, gap: gap, rendPip: rendPip, gapRes: gapRes, serve: serve, rata: rata, risp: risp};
 }
 function figura(eta, x, vecchio){
@@ -14152,6 +14152,11 @@ function irpef(red){ return Math.min(red, 28000) * 0.23 + Math.max(0, Math.min(r
 function imponibile(red){ return red; }
 /* IRPEF risparmiata con la deduzione: differenza esatta, anche quando la deduzione scavalca uno scaglione */
 function rispIrpef(red, ded){ var i = imponibile(red); return irpef(i) - irpef(Math.max(0, i - ded)); }
+/* quanto della deduzione cade in ogni scaglione: chi ha 29.000 € e versa 1.200 € recupera il 33% su 1.000 € e il 23% su 200 € */
+function quote(red, ded){ var i = imponibile(red), lo = Math.max(0, i - ded), S = [[0, 28000, 0.23], [28000, 50000, 0.33], [50000, Infinity, 0.43]], q = [];
+  S.forEach(function(b){ var x = Math.max(0, Math.min(i, b[1]) - Math.max(lo, b[0])); if(x > 0.5) q.unshift([b[2], x]); }); return q; }
+function spiegaAliq(red, ded){ var q = quote(red, ded); if(!q.length) return ''; if(q.length === 1) return 'aliquota ' + Math.round(q[0][0] * 100) + '%';
+  return q.map(function(x){ return Math.round(x[0] * 100) + '% su ' + String(Math.round(x[1])).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' €'; }).join(' e '); }
 function aliqPrest(n){ return n <= 15 ? 0.15 : Math.max(0.09, 0.15 - 0.003 * (n - 15)); }
 function dip(){ return P.lav === 'dip'; }
 function rendDi(age){ if(P.comp === 'lib') return P.r; if(P.comp === 'lc') return age <= 49 ? COMP.azi.m10 : (age <= 59 ? COMP.bil.m10 : COMP.gar.m10); return COMP[P.comp].m10; }
@@ -14174,7 +14179,7 @@ function calc(){
   }
   var al = aliqPrest(n), base = Math.min(V, (ded + T) * n), tassa = al * base, netto = V - tassa;
   var ar = anniRendita(P.etaP), rendAnnua = netto / ar;
-  return {n: n, car: car, C: C, B: B, D: D, T: T, ded: ded, m: m, aliq: aliq, risp: risp, rispTot: risp * n, versAnno: versAnno,
+  return {n: n, car: car, C: C, B: B, D: D, T: T, ded: ded, m: m, aliq: aliq, spA: P.lav === 'for' ? '' : spiegaAliq(red, ded), risp: risp, rispTot: risp * n, versAnno: versAnno,
     vers: vers, versTu: (C + B) * n, versDat: D * n, versTfr: T * n, lordo: V, rend: V - vers, al: al, tassa: tassa, netto: netto,
     rendM: rendAnnua / 12, meta: netto / 2, rendM50: rendAnnua / 2 / 12, ar: ar, costoNetto: (C + B) * n - risp * n, conto: VV,
     oltre: C + B + D > DEDUC, rows: rows};
@@ -14259,14 +14264,14 @@ function risPiano(){
     '<div class="mo-mut">netti, su ' + e0(c.lordo) + ' accumulati · ' + nomeComp() + '</div>' +
     gArea(c.rows) +
     kv([['Versi tu in ' + c.n + ' anni', e0(c.versTu)], ['Dal datore e dal TFR', e0(c.versDat + c.versTfr)], ['Rendimenti', e0(c.rend), 'mo-ok']]) +
-    kv([['Rimborso IRPEF ogni anno', e0(c.risp), 'mo-ok', P.lav === 'for' ? 'forfettario: nessuna deduzione' : 'aliquota ' + pc(c.aliq * 100, 0)], ['Ti costa davvero, al mese', e0(Math.max(0, (c.C + c.B - c.risp) / 12)), '', 'dopo il rimborso'], ['Tassa sulla prestazione', pc(c.al * 100), '', c.n > 15 ? 'scende con gli anni' : 'dal 16° anno scende']]) +
+    kv([['Rimborso IRPEF ogni anno', e0(c.risp), 'mo-ok', P.lav === 'for' ? 'forfettario: nessuna deduzione' : c.spA], ['Ti costa davvero, al mese', e0(Math.max(0, (c.C + c.B - c.risp) / 12)), '', 'dopo il rimborso'], ['Tassa sulla prestazione', pc(c.al * 100), '', c.n > 15 ? 'scende con gli anni' : 'dal 16° anno scende']]) +
     '<div class="pp-box"><div class="pp-lab">Come puoi riceverlo</div>' +
     kv([['Tutto in rendita', e0(c.rendM) + '<small> al mese</small>', 'mo-acc'], ['Metà in capitale', e0(c.meta), '', 'subito, alla pensione'], ['più una rendita di', e0(c.rendM50) + '<small> al mese</small>']]) +
     '<p class="pp-hint">Rendita stimata su circa ' + Math.round(c.ar) + ' anni di vita attesa a ' + P.etaP + ' anni: l\'importo vero dipende dai coefficienti del contratto. Dal 2026 si può scegliere anche una rendita a durata definita, prelievi liberi o un piano frazionato: vedi «Prestazioni e novità 2026».</p></div>' +
     (c.oltre ? '<p class="pp-hint">Oltre 5.300 € l\'anno (tu più datore) i contributi non si deducono: alla pensione quella parte non è tassata.</p>' : '');
 }
 function risFisco(){
-  var c = calc(), h = '<div class="mo-mut">Ogni anno deduci</div><div class="mo-big mo-ok">' + e0(c.ded) + '</div><div class="mo-mut">' + (P.lav === 'for' ? 'nel regime forfettario i contributi non si deducono: restano i vantaggi sui rendimenti e sulla prestazione' : 'e risparmi ' + e0(c.risp) + ' di IRPEF e addizionali (aliquota ' + pc(c.aliq * 100, 1) + ')') + '</div>' +
+  var c = calc(), h = '<div class="mo-mut">Ogni anno deduci</div><div class="mo-big mo-ok">' + e0(c.ded) + '</div><div class="mo-mut">' + (P.lav === 'for' ? 'nel regime forfettario i contributi non si deducono: restano i vantaggi sui rendimenti e sulla prestazione' : 'e risparmi ' + e0(c.risp) + ' di IRPEF' + (P.add ? ' e addizionali' : '') + ' (' + c.spA + (P.add ? ', più ' + pc(P.add, 1) + ' di addizionali' : '') + ')') + '</div>' +
     kv([['Tasse risparmiate in ' + c.n + ' anni', e0(c.rispTot), 'mo-ok'], ['Versato da te, al netto del rimborso', e0(c.costoNetto)], ['Stessi soldi fuori dal fondo', e0(c.conto), '', 'rendimenti tassati al 26%']]) +
     '<div class="pp-tw"><table class="pp-t"><thead><tr><th>Anno</th><th>Età</th><th>Tu</th>' + (dip() ? '<th>Datore</th><th>TFR</th>' : '') + '<th>Dedotto</th><th>Rimborso</th><th>Posizione</th></tr></thead><tbody>' +
     c.rows.map(function(r){ return '<tr><td>' + r.a + '</td><td>' + r.eta + '</td><td>' + e0(r.tu) + '</td>' + (dip() ? '<td>' + e0(r.dat) + '</td><td>' + e0(r.tfr) + '</td>' : '') + '<td>' + e0(r.ded) + '</td><td class="ok">' + e0(r.risp) + '</td><td><b>' + e0(r.V) + '</b></td></tr>'; }).join('') +
@@ -14404,7 +14409,7 @@ window.__pip = {
     if(dip()) scelte.push(['TFR', P.tfr ? 'Nel fondo' : 'Non conferito', P.tfr ? 'circa ' + eu(c.T) + ' l\'anno' : ''], ['Contributo del datore', c.D ? eu(c.D) + ' l\'anno' : 'nessuno', c.D ? pc(P.dat) + ' della retribuzione' : '']);
     scelte.push(['Accessoria LTC', P.ltc ? 'Inclusa' : 'Non inclusa', P.ltc ? 'se si perde l\'autosufficienza' : '']);
     S.push({t: 'Le scelte', p: 1, parti: [['cifre', scelte]]});
-    S.push({t: 'Il vantaggio fiscale, ogni anno', p: 1, parti: [['two', [['tab', [['Contributi dedotti dal reddito', eu(c.ded)], [P.add ? 'IRPEF e addizionali risparmiate ogni anno' : 'IRPEF risparmiata ogni anno', eu(c.risp)], ['In ' + c.n + ' anni', eu(c.rispTot)]]]].concat(c.oltre ? [['nota', 'Oltre 5.300 € l\'anno il contributo non si deduce.']] : []), [['punti', [['Lo Stato restituisce', P.lav === 'for' ? 'Nel regime forfettario i contributi non si deducono: restano i vantaggi sulla tassazione dei rendimenti e della prestazione.' : 'Con il ' + Math.round(c.aliq * 100) + '% di aliquota, ogni anno tornano ' + eu(c.risp) + ' con la dichiarazione dei redditi.']]]]]]});
+    S.push({t: 'Il vantaggio fiscale, ogni anno', p: 1, parti: [['two', [['tab', [['Contributi dedotti dal reddito', eu(c.ded)], [(P.add ? 'IRPEF e addizionali risparmiate ogni anno' : 'IRPEF risparmiata ogni anno') + (c.spA && c.spA.indexOf(' su ') > 0 ? ' (' + c.spA + ')' : ''), eu(c.risp)], ['In ' + c.n + ' anni', eu(c.rispTot)]]]].concat(c.oltre ? [['nota', 'Oltre 5.300 € l\'anno il contributo non si deduce.']] : []), [['punti', [['Lo Stato restituisce', P.lav === 'for' ? 'Nel regime forfettario i contributi non si deducono: restano i vantaggi sulla tassazione dei rendimenti e della prestazione.' : 'Con il ' + Math.round(c.aliq * 100) + '% di aliquota, ogni anno tornano ' + eu(c.risp) + ' con la dichiarazione dei redditi.']]]]]]});
     S.push({t: 'Alla pensione', p: 1, parti: [['tab', [['Versato in ' + c.n + ' anni (tu, datore, TFR)', eu(c.vers)], ['Posizione accumulata', eu(c.lordo)], ['Tassa sulla prestazione', pc(c.al * 100)], ['Netto alla pensione', eu(c.netto)], ['Tutto in rendita, al mese (stima)', eu(c.rendM)], ['Oppure metà in capitale', eu(c.meta) + ' + ' + eu(c.rendM50) + ' al mese']]], ['nota', 'Rendita stimata su circa ' + Math.round(c.ar) + ' anni di vita attesa: l\'importo vero dipende dai coefficienti del contratto.']]});
     if(dip() && P.tfr) S.push({t: 'Il TFR: nel fondo o in azienda', p: comp ? 2 : 1, parti: [['tab', [['TFR di ogni anno (6,91% del reddito)', eu(t.T)], ['Nel fondo pensione, netto alla pensione', eu(t.fondoNet)], ['Lasciato in azienda, netto', eu(t.azNet)], ['Differenza', eu(t.diff)]]], ['nota', 'In azienda il TFR si rivaluta dell\'1,5% più il 75% dell\'inflazione (' + pc(P.infl) + '), con imposta del 17%, ed è tassato all\'aliquota media IRPEF (circa ' + pc(t.media * 100) + ').' + (t.D ? ' Nel fondo è contato anche il contributo del datore.' : '')]]});
     if(comp){ S.push({t: 'Come funziona', p: 2, parti: [['punti', COME]]}); S.push({t: 'I comparti: rendimenti netti medi annui', p: 2, parti: [['tab', compRighe()]]}); S.push({t: 'Da sapere', p: 3, parti: [['punti', SAPERE]]}); }
@@ -14450,6 +14455,8 @@ document.addEventListener('DOMContentLoaded',function(){applica(cur);});window.a
 var g=document.getElementById('tema');if(g)g.addEventListener('click',function(e){var b=e.target.closest('button[data-t]');if(!b)return;cur=b.getAttribute('data-t');try{localStorage.setItem(K,cur);}catch(x){}applica(cur);});
 })();</script>
 
+
+
 <style id="az-css">
 #az{--bg:#FAF7F0;--card:#FFFFFF;--ink:#0B2036;--mut:#55606E;--line:rgba(11,32,54,.13);--acc:#B4600F;--acc2:#E08A3E;--ok:#17703F;--no:#AD3324;--soft:#F1ECE2;--hero:#0B2036;--heroInk:#FAF7F0;--heroMut:rgba(250,247,240,.72);
   --s1:#E08A3E;--s2:#2F5D8C;--s3:#2A8A78;--s4:#8C6BB1;
@@ -14458,7 +14465,13 @@ html.scuro #az{--bg:#17120E;--card:rgba(255,255,255,.045);--ink:#F4EDE4;--mut:#C
   --s1:#F2A65A;--s2:#86ACDB;--s3:#5FC2AE;--s4:#BFA2DC;
   background:radial-gradient(60% 60% at 8% 0%,#4a3721 0%,transparent 70%),radial-gradient(50% 55% at 100% 8%,rgba(138,84,32,.7) 0%,transparent 70%),linear-gradient(180deg,#2a231c 0%,#1c1712 60%,#15110d 100%)}
 #az[hidden]{display:none}
-body.az-on #azioni,body.az-on #fase{visibility:hidden}
+body.az-on #azioni,body.az-on #fase{display:none!important}
+#azAz{display:none}body.az-on #azAz{display:flex}
+body.az-pres .top{display:none}body.az-pres #az{top:0}
+.az-pbar{display:none}body.az-pres .az-pbar{display:flex;position:fixed;left:14px;bottom:14px;z-index:7;align-items:center;gap:2px;padding:4px 6px;background:rgba(28,23,18,.94);border:1px solid rgba(255,255,255,.12);border-radius:30px;box-shadow:0 12px 28px -12px rgba(0,0,0,.6);max-width:calc(100vw - 28px);overflow-x:auto;scrollbar-width:none}
+.az-pbar button{font:inherit;font-size:.72rem;background:none;border:0;color:#E8EEF5;padding:7px 11px;border-radius:20px;cursor:pointer;white-space:nowrap}.az-pbar button:hover{background:rgba(255,255,255,.1)}
+.az-pbar button[aria-current=true]{background:#E8964A;color:#1C1712;font-weight:700}.az-pbar .az-esci{margin-left:6px;border:1px solid rgba(255,255,255,.25)}
+body.az-pres #az .az-body{padding-bottom:80px}
 .az-hero{background:var(--hero);color:var(--heroInk)}
 .az-hero .az-w{padding-top:34px;padding-bottom:30px}
 .az-w{max-width:1180px;margin:0 auto;padding:0 24px}
@@ -14533,7 +14546,7 @@ body.az-on #azioni,body.az-on #fase{visibility:hidden}
 @media (max-width:900px){.az-g2,.az-g2e{grid-template-columns:1fr}.az-g3{grid-template-columns:1fr}}
 @media (max-width:600px){.az-w{padding:0 16px}.az-c{padding:16px}.az-cmp td:first-child{width:auto}}
 </style>
-<div id="az" hidden role="region" aria-label="Aziende"></div>
+<div id="az" hidden role="region" aria-label="Aziende"></div><div class="az-pbar" id="azPbar" role="toolbar" aria-label="Controlli della presentazione"></div>
 <script>/* ===================== Aziende: crisi d'impresa, TFR (impresa e dipendente), TFM, salute d'impresa ===================== */
 (function(){
 'use strict';
@@ -14542,9 +14555,21 @@ var ANNO = new Date().getFullYear();
 function grp(n){ var r = Math.round(n), s = String(Math.abs(r)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); return (r < 0 ? '−' : '') + s; }
 function eu(n){ return grp(n) + ' €'; }
 function pc(x, d){ return (Math.round(x * Math.pow(10, d || 1)) / Math.pow(10, d || 1)).toFixed(d === 0 ? 0 : (d || 1)).replace('.', ',') + '%'; }
-var VISTE = [['crisi', 'Crisi d\'impresa'], ['tfr', 'TFR: vantaggio impresa'], ['dip', 'TFR: vantaggio dipendente'], ['tfm', 'TFM amministratori'], ['salute', 'Salute d\'impresa']];
+var VISTE = [['crisi', 'Crisi d\'impresa'], ['tfr', 'TFR: vantaggio impresa'], ['dip', 'TFR: vantaggio dipendente'], ['tfm', 'TFM amministratori'], ['keyman', 'Key man'], ['salute', 'Salute d\'impresa']];
 var cur = 'crisi', attivo = false, prima = null;
-var box = $('#az');
+var box = $('#az'), pbar = $('#azPbar');
+(function(){ var az = $('#azioni'); if(!az || $('#azAz')) return; var d = document.createElement('div'); d.className = 'azioni'; d.id = 'azAz';
+  d.innerHTML = '<button type="button" class="azione" data-az-a="presenta" aria-label="Presenta a tutto schermo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span>Presenta</span></button>';
+  az.parentNode.insertBefore(d, az); d.addEventListener('click', function(){ presenta(); }); })();
+var presAz = false;
+function barra(){ pbar.innerHTML = VISTE.map(function(x){ return '<button type="button" data-azp="' + x[0] + '"' + (x[0] === cur ? ' aria-current="true"' : '') + '>' + x[1] + '</button>'; }).join('') + '<button type="button" class="az-esci" data-azp="esci">Esci</button>'; }
+function presenta(){ presAz = true; document.body.classList.add('az-pres'); barra(); try{ var r = document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); if(r && r.catch) r.catch(function(){}); }catch(e){} }
+function finePres(){ if(!presAz) return; presAz = false; document.body.classList.remove('az-pres'); if(document.fullscreenElement && document.exitFullscreen){ try{ document.exitFullscreen(); }catch(e){} } }
+document.addEventListener('fullscreenchange', function(){ if(!document.fullscreenElement && presAz) finePres(); });
+document.addEventListener('keydown', function(e){ if(!presAz) return; var i = VISTE.map(function(x){ return x[0]; }).indexOf(cur);
+  if(e.key === 'Escape') finePres(); else if((e.key === 'ArrowRight' || e.key === 'PageDown') && !/INPUT|SELECT|TEXTAREA/.test((e.target.tagName || ''))){ if(i < VISTE.length - 1){ e.preventDefault(); apri(VISTE[i + 1][0]); } }
+  else if((e.key === 'ArrowLeft' || e.key === 'PageUp') && !/INPUT|SELECT|TEXTAREA/.test((e.target.tagName || ''))){ if(i > 0){ e.preventDefault(); apri(VISTE[i - 1][0]); } } });
+pbar.addEventListener('click', function(e){ var b = e.target.closest('[data-azp]'); if(!b) return; var v = b.getAttribute('data-azp'); if(v === 'esci') finePres(); else apri(v); });
 var ICO = {
   pal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1M10 21v-3h4v3"/></svg>',
   tgt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>',
@@ -14613,7 +14638,7 @@ function vTfr(){
     sl('infl', 'Inflazione attesa', 0, 5, 0.1, I.infl, FMT.infl, 'Il TFR in azienda si rivaluta dell\'1,5% più il 75% dell\'inflazione.') +
     sl('anni', 'Orizzonte', 3, 20, 1, I.anni, FMT.anni) +
     '<div class="az-lab" style="margin-top:6px">Imposte sul reddito d\'impresa</div><div class="az-seg" role="group">' + [[24, 'IRES 24%'], [33, 'IRPEF 33%'], [43, 'IRPEF 43%']].map(function(x){ return '<button type="button" data-az-ires="' + x[0] + '" aria-pressed="' + (I.ires === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
-    '<small class="az-mut">Società di capitali: IRES. Ditte individuali e società di persone: l\'aliquota marginale IRPEF del titolare o dei soci.</small>' +
+    '<small class="az-mut">Società di capitali: IRES. Ditte individuali e società di persone (snc, sas): il reddito d\'impresa è tassato in capo al titolare o ai soci, all\'aliquota marginale IRPEF di ciascuno. Nel regime forfettario la deduzione non dà risparmio d\'imposta.</small>' +
     '</div></div>' +
     '<div class="az-c" style="margin-top:18px" id="azTfrT"></div>' +
     '<div class="az-sec"><h3>I 5 vantaggi per il titolare</h3><p>Per le imprese fino a 49 dipendenti, quando i lavoratori versano il TFR in una forma di previdenza complementare.</p></div>' +
@@ -14706,7 +14731,33 @@ function rTfm(){
   $('#azTfmR').innerHTML = '<div class="az-kv"><div><span>Imposte risparmiate ogni anno</span><b class="az-ok">' + eu(tax) + '</b></div><div><span>In ' + FMT.mand(M.mand) + '</span><b class="az-ok">' + eu(tax * M.mand) + '</b></div><div><span>TFM accumulato a fine mandato</span><b>' + eu(M.acc * M.mand) + '</b></div></div>';
 }
 
-/* ---------- 5. Salute d'impresa ---------- */
+/* ---------- 5. Key man ---------- */
+var K = {utile: 150000, anni: 2, sost: 40000, debiti: 100000};
+function vKey(){
+  var vai = !!window.__vaiShell;
+  return hero('Aziende · Persone chiave', 'Se viene a mancare <em>chi fa girare l\'impresa</em>', 'La polizza key man protegge l\'azienda dalla perdita improvvisa di una persona chiave: il titolare, un socio, il direttore commerciale, il tecnico che nessun altro sa sostituire.') +
+    '<div class="az-w az-body"><div class="az-g3">' +
+    '<div class="az-c"><span class="az-n">1</span><h3>Chi è assicurato</h3><p class="az-mut">La persona chiave. Contraente e beneficiaria è l\'impresa, che paga il premio.</p></div>' +
+    '<div class="az-c"><span class="az-n">2</span><h3>Che cosa copre</h3><p class="az-mut">Il decesso e, se previsto, l\'invalidità della persona chiave: il capitale va all\'azienda, non alla famiglia.</p></div>' +
+    '<div class="az-c"><span class="az-n">3</span><h3>A che cosa serve</h3><p class="az-mut">Ricavi persi nel periodo di transizione, ricerca e formazione di un sostituto, rassicurare banche e fornitori, liquidare le quote agli eredi.</p></div></div>' +
+    '<div class="az-sec"><h3>Quanto capitale serve?</h3><p>Una stima di massima: il contributo della persona al risultato per il tempo necessario a sostituirla, più i costi di sostituzione e i debiti che oggi si reggono sulla sua presenza.</p></div>' +
+    '<div class="az-g2"><div class="az-c" id="azKeyR"></div><div class="az-c az-ctl">' +
+    '<label>Contributo annuo della persona al margine dell\'impresa (€)<input type="number" data-az="utile" value="' + K.utile + '" step="5000" min="0" inputmode="numeric"></label>' +
+    sl('anni', 'Tempo per sostituirla e tornare a regime', 1, 5, 0.5, K.anni, function(v){ return String(v).replace('.', ',') + (v === 1 ? ' anno' : ' anni'); }) +
+    '<label>Costi di ricerca, inserimento e formazione del sostituto (€)<input type="number" data-az="sost" value="' + K.sost + '" step="5000" min="0" inputmode="numeric"></label>' +
+    '<label>Debiti e fidi legati alla sua presenza o garantiti da lei (€)<input type="number" data-az="debiti" value="' + K.debiti + '" step="10000" min="0" inputmode="numeric"></label>' +
+    '</div></div>' +
+    '<div class="az-g2e" style="margin-top:18px"><div class="az-c"><span class="az-tag">Fisco</span><h3>Premi e capitale</h3><ul class="az-li"><li>Il capitale incassato dall\'impresa è un componente positivo del reddito d\'impresa, quindi tassato.</li><li>La deducibilità dei premi è <b>discussa</b>: per molti sono un costo inerente all\'attività, ma l\'Agenzia delle Entrate la contesta spesso e la giurisprudenza è divisa (per esempio, contraria la CTR Lombardia, sentenza 615/2018). Va valutata con il commercialista prima di dedurli.</li></ul></div>' +
+    '<div class="az-c az-pr"><span class="az-tag">La soluzione</span><h3>Protezione caso morte</h3><p class="az-mut">Un capitale certo se viene a mancare la persona assicurata. Le condizioni per un\'impresa contraente vanno verificate sulla documentazione del prodotto.</p>' + (vai ? '<button type="button" class="az-btn g" data-az-vai="peramore">Apri PerAmore →</button>' : '') + '</div></div>' +
+    '<p class="az-note">Stima illustrativa del capitale da assicurare, non un preventivo: il capitale assicurabile e il premio dipendono dalla valutazione dell\'assicuratore.</p></div>';
+}
+function rKey(){
+  var a = K.utile * K.anni, tot = a + K.sost + K.debiti;
+  $('#azKeyR').innerHTML = '<div class="az-lab">Capitale da assicurare, circa</div><div class="az-big">' + eu(Math.round(tot / 5000) * 5000) + '</div>' +
+    '<div class="az-kv"><div><span>Margine perso nella transizione</span><b>' + eu(a) + '</b></div><div><span>Costi del sostituto</span><b>' + eu(K.sost) + '</b></div><div><span>Debiti da mettere al sicuro</span><b>' + eu(K.debiti) + '</b></div></div>';
+}
+
+/* ---------- 6. Salute d'impresa ---------- */
 function vSalute(){
   var pr = [['wsalute', 'WSalute', 'Polizza sanitaria', 'Ricoveri, diagnostica ad alta specializzazione, visite ed esami, second opinion, check up di prevenzione e teleconsulto, nei migliori centri medici.'],
     ['semplice', 'Semplice', 'Lesioni e malattia', 'Contratto per la protezione e la cura della persona: indennizzi per infortuni e malattia.'],
@@ -14723,11 +14774,11 @@ function vSalute(){
 }
 
 function hero(k, h, s){ return '<div class="az-hero"><div class="az-w"><p class="az-k">' + k + '</p><h2 class="az-h">' + h + '</h2><p class="az-sub">' + s + '</p></div></div>'; }
-var V = {crisi: [vCrisi], tfr: [vTfr, rTfr], dip: [vDip, rDip], tfm: [vTfm, rTfm], salute: [vSalute]};
+var V = {crisi: [vCrisi], tfr: [vTfr, rTfr], dip: [vDip, rDip], tfm: [vTfm, rTfm], keyman: [vKey, rKey], salute: [vSalute]};
 
 /* ---------- guscio: la scheda Aziende accanto a Salute, Investimenti, Previdenza ---------- */
 function r2(){ var n = $('#r2'); if(n) n.innerHTML = VISTE.map(function(x){ return '<a href="#" data-azv="' + x[0] + '"' + (x[0] === cur ? ' aria-current="page"' : '') + '>' + x[1] + '</a>'; }).join(''); }
-function disegna(){ box.innerHTML = V[cur][0](); if(V[cur][1]) V[cur][1](); box.scrollTop = 0; r2(); document.title = 'Dashboard Consulenza · Aziende'; }
+function disegna(){ box.innerHTML = V[cur][0](); if(V[cur][1]) V[cur][1](); box.scrollTop = 0; r2(); if(presAz) barra(); document.title = 'Dashboard Consulenza · Aziende'; }
 function apri(v){
   if(v) cur = v;
   if(!attivo){
@@ -14740,7 +14791,7 @@ function apri(v){
   disegna();
 }
 function chiudi(ripristina){
-  if(!attivo) return; attivo = false; box.hidden = true; document.body.classList.remove('az-on');
+  if(!attivo) return; finePres(); attivo = false; box.hidden = true; document.body.classList.remove('az-on');
   if(ripristina && prima){ if(prima.mo) prima.mo.hidden = false; if($('#r2')) $('#r2').innerHTML = prima.r2; $$('.aree button').forEach(function(b, i){ b.setAttribute('aria-selected', prima.sel[i] || 'false'); }); document.title = prima.title; }
 }
 /* le altre aree: se si torna all'area di prima la testata non ridisegna nulla, quindi si ripristina */
@@ -14769,6 +14820,7 @@ box.addEventListener('input', function(e){
     if(kk === 'eta' && D.etaP < D.eta + 1){ D.etaP = D.eta + 1; var s2 = $('[data-az="etaP"]', box); if(s2) s2.value = D.etaP; var o2 = $('[data-azo="etaP"]', box); if(o2) o2.textContent = FMT.etaP(D.etaP); }
     if(kk === 'etaP' && D.etaP < D.eta + 1){ D.etaP = D.eta + 1; t.value = D.etaP; }
     o = $('[data-azo="' + kk + '"]', box); if(o) o.textContent = FMT[kk](D[kk]); if(D.ral > 0) rDip(); return; }
+  if(cur === 'keyman' && k){ K[k] = Math.max(0, +t.value || 0); o = $('[data-azo="' + k + '"]', box); if(o) o.textContent = String(K[k]).replace('.', ',') + (K[k] === 1 ? ' anno' : ' anni'); rKey(); return; }
   if(cur === 'tfm' && k){ M[k] = +t.value || 0; o = $('[data-azo="' + k + '"]', box); if(o) o.textContent = FMT[k](M[k]); rTfm(); }
 });
 window.__az = {apri: apri, chiudi: chiudi, viste: VISTE, calcImpresa: calcImpresa, calcDip: calcDip, I: I, D: D};
