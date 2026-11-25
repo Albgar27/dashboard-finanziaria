@@ -14827,5 +14827,92 @@ window.__az = {apri: apri, chiudi: chiudi, viste: VISTE, calcImpresa: calcImpres
 })();
 </script>
 
+
+<style id="hub-css">
+#hub{position:fixed;inset:0;z-index:40;overflow:auto;background:#FFFFFF;color:#0B2036;font-family:'Inter','Helvetica Neue',Arial,sans-serif;-webkit-overflow-scrolling:touch}
+#hub[hidden]{display:none}
+body.hub-on{overflow:hidden}
+.hub-top{background:#0B2036;color:#FFFFFF}
+.hub-w{max-width:1180px;margin:0 auto;padding:0 24px}
+.hub-top .hub-w{padding-top:34px;padding-bottom:34px;display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.hub-br{font-size:.76rem;letter-spacing:.18em;text-transform:uppercase;color:#A9B8CB;font-weight:600;margin:0 0 14px}
+.hub-br b{color:#FFFFFF}
+.hub-h{font-weight:800;font-size:clamp(2rem,4.4vw,3.2rem);line-height:1.05;letter-spacing:-.03em;margin:0}
+.hub-h em{font-style:normal;color:#F6C08A}
+.hub-d{color:#C9D4DF;margin:10px 0 0;font-size:1.05rem}
+.hub-sp{flex:1}
+.hub-x{border:1px solid rgba(255,255,255,.3);background:none;color:#FFFFFF;font:inherit;font-size:.9rem;font-weight:600;padding:10px 16px;border-radius:6px;cursor:pointer}
+.hub-x:hover{background:rgba(255,255,255,.1)}
+.hub-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:28px 0 40px}
+.hub-a{border-radius:12px;padding:24px 26px 22px;color:#FFFFFF;display:flex;flex-direction:column;min-height:230px}
+.hub-a h2{font-weight:800;font-size:1.7rem;letter-spacing:-.02em;margin:0 0 6px;line-height:1.1}
+.hub-a p{margin:0 0 18px;line-height:1.5;opacity:.9;font-size:.98rem;max-width:520px}
+.hub-a .hub-go{align-self:flex-start;margin-top:auto;border:0;border-radius:6px;background:#FFFFFF;color:#0B2036;font:inherit;font-weight:700;font-size:.95rem;padding:11px 18px;cursor:pointer}
+.hub-a .hub-go:hover{filter:brightness(.94)}
+.hub-l{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px}
+.hub-l button{border:0;border-radius:5px;background:rgba(255,255,255,.14);color:inherit;font:inherit;font-size:.84rem;padding:6px 10px;cursor:pointer}
+.hub-l button:hover{background:rgba(255,255,255,.28)}
+.hub-a.sal{background:#1E5257}.hub-a.inv{background:#1B4A7A}.hub-a.prev{background:#9A4A1C}.hub-a.az{background:#2F6B4F}
+.hub-n{color:#545E6B;font-size:.82rem;padding-bottom:30px;line-height:1.5}
+.hub-home{display:inline-flex;align-items:center;gap:6px;border:0;background:none;color:inherit;font:inherit;cursor:pointer;padding:0}
+.hub-home svg{width:15px;height:15px;opacity:.8}
+@media (max-width:900px){.top .marchio{display:inline-flex!important;align-items:center;font-size:0!important;padding:6px}.top .marchio svg{width:18px!important;height:18px!important;margin:0!important}}
+@media (max-width:760px){.hub-g{grid-template-columns:1fr}.hub-a{min-height:0}.hub-w{padding:0 16px}}
+</style>
+<div id="hub" role="dialog" aria-modal="true" aria-labelledby="hubH"></div>
+<script>/* ===================== Hub di apertura: si sceglie l'area da cui partire ===================== */
+(function(){
+'use strict';
+var hub = document.getElementById('hub');
+var AREE = [['sal', 'Salute e protezione', 'Non autosufficienza, famiglia, infortuni e malattia, sanità integrativa, casa.', 'confronto'],
+  ['inv', 'Investimenti', 'Il contesto dei mercati, i piani di risparmio e le soluzioni a premio unico.', 'scenari'],
+  ['prev', 'Previdenza', 'La pensione complementare con Alleata Previdenza e il vantaggio fiscale di ogni anno.', 'pip'],
+  ['az', 'Aziende', 'Crisi d\'impresa, TFR per l\'impresa e per i dipendenti, TFM, key man e salute d\'impresa.', '']];
+function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
+function schede(a){
+  if(a[0] === 'az') return window.__az ? window.__az.viste.map(function(x){ return [x[0], x[1]]; }) : [];
+  try{ return window.__presLista ? window.__presLista(a[3]) : []; }catch(e){ return []; }
+}
+function disegna(){
+  var aree = AREE.filter(function(a){ return a[0] === 'az' ? !!window.__az : !!document.querySelector('.aree button[data-area="' + a[0] + '"]'); });
+  var oggi = new Date().toLocaleDateString('it-IT', {weekday: 'long', day: 'numeric', month: 'long'});
+  hub.innerHTML = '<div class="hub-top"><div class="hub-w"><div><p class="hub-br"><b>Dashboard</b> consulenza · ' + esc(oggi) + '</p><h1 class="hub-h" id="hubH">Da dove <em>partiamo</em>?</h1><p class="hub-d">Scegli l\'area dell\'incontro: poi ti muovi tra le schede come sempre, dalla barra in alto.</p></div><span class="hub-sp"></span>' +
+    (hub.__aperto ? '<button type="button" class="hub-x" data-hub-x>Torna alla scheda aperta</button>' : '') + '</div></div>' +
+    '<div class="hub-w"><div class="hub-g">' + aree.map(function(a){
+      var l = schede(a);
+      return '<div class="hub-a ' + a[0] + '"><h2>' + esc(a[1]) + '</h2><p>' + esc(a[2]) + '</p>' +
+        (l.length ? '<div class="hub-l">' + l.map(function(x){ return '<button type="button" data-hub-a="' + a[0] + '" data-hub-v="' + esc(x[0]) + '">' + esc(x[1]) + '</button>'; }).join('') + '</div>' : '') +
+        '<button type="button" class="hub-go" data-hub-a="' + a[0] + '" data-hub-v="">Apri ' + esc(a[1]) + ' →</button></div>';
+    }).join('') + '</div><p class="hub-n">Strumento illustrativo: le simulazioni non sono dati ufficiali né un\'offerta. Fanno fede la documentazione precontrattuale e contrattuale dei prodotti.</p></div>';
+}
+function apri(){ disegna(); hub.hidden = false; document.body.classList.add('hub-on'); hub.scrollTop = 0; var b = hub.querySelector('.hub-go'); if(b) try{ b.focus({preventScroll: true}); }catch(e){} }
+function chiudi(){ hub.hidden = true; hub.__aperto = true; document.body.classList.remove('hub-on'); }
+function vai(a, v){
+  chiudi();
+  if(a === 'az'){ if(window.__az) window.__az.apri(v || undefined); return; }
+  if(document.body.classList.contains('az-on') && window.__az) window.__az.chiudi(true);
+  if(v && window.__vaiShell && window.__vaiShell(v)) return;
+  var b = document.querySelector('.aree button[data-area="' + a + '"]'); if(b) b.click();
+}
+hub.addEventListener('click', function(e){
+  var x = e.target.closest('[data-hub-x]'); if(x){ chiudi(); return; }
+  var b = e.target.closest('[data-hub-a]'); if(!b) return;
+  vai(b.getAttribute('data-hub-a'), b.getAttribute('data-hub-v'));
+});
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !hub.hidden && hub.__aperto) chiudi(); });
+/* il marchio in alto a sinistra riporta all'hub */
+function marchio(){
+  var m = document.querySelector('.top .marchio'); if(!m || m.__hub) return; m.__hub = 1;
+  m.setAttribute('role', 'button'); m.setAttribute('tabindex', '0'); m.setAttribute('title', 'Torna all\'inizio: scegli l\'area'); m.style.cursor = 'pointer';
+  m.insertAdjacentHTML('afterbegin', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:6px"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>');
+  m.addEventListener('click', apri); m.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); apri(); } });
+}
+marchio();
+/* si apre all'avvio, salvo un collegamento diretto a una scheda (#pip, #persempre...) */
+if(!(location.hash || '').replace('#', '')) apri(); else hub.hidden = true;
+window.__hub = {apri: apri, chiudi: chiudi};
+})();
+</script>
+
 </body>
 </html>
