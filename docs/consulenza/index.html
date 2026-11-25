@@ -1510,9 +1510,9 @@ Stampa
       &lt;p class=&quot;note&quot; id=&quot;psVerN&quot; style=&quot;margin-top:6px&quot;&gt;&lt;/p&gt;&lt;/div&gt;
      &lt;div class=&quot;ctl&quot; style=&quot;margin-top:20px&quot;&gt;&lt;label for=&quot;psRen&quot;&gt;Rendita mensile: &lt;b id=&quot;psRenV&quot; class=&quot;mono&quot;&gt;1.500 €&lt;/b&gt;&lt;/label&gt;&lt;input type=&quot;range&quot; id=&quot;psRen&quot; min=&quot;500&quot; max=&quot;3000&quot; step=&quot;250&quot; value=&quot;1500&quot;&gt;&lt;/div&gt;&lt;/div&gt;
     &lt;div class=&quot;stepbox&quot; id=&quot;psS3&quot;&gt;&lt;h4&gt;&lt;i&gt;3&lt;/i&gt;Il premio&lt;/h4&gt;
-     &lt;span class=&quot;lbl&quot;&gt;Premio mensile per versione, per la tua età e rendita&lt;/span&gt;
-     &lt;div class=&quot;vers3&quot; id=&quot;psTre&quot; role=&quot;group&quot; aria-label=&quot;Premio per versione&quot;&gt;&lt;/div&gt;
-     &lt;p data-fase=&quot;pro&quot; class=&quot;note&quot; id=&quot;psPremN&quot;&gt;Calcolato in automatico con la tariffa del configuratore Alleanza (pagamento mensile): il premio della rendita ripartisce su tutto il piano, fino ai 65 anni, il versamento complessivo previsto per la tua età (valori verificati sul configuratore, a 55 e 60 anni il 17/11/2026). Malattie gravi +10 € al mese, decesso +10% dei premi. Con rendita oltre 2.000 € al mese, oltre al questionario sanitario servono visita medica, MMSE (Mini Mental State Examination) ed ecodoppler carotideo.&lt;/p&gt;
+     &lt;div class=&quot;ctl&quot;&gt;&lt;label for=&quot;psPrem&quot;&gt;Premio annuo (€)&lt;/label&gt;&lt;input type=&quot;number&quot; id=&quot;psPrem&quot; min=&quot;0&quot; step=&quot;10&quot; placeholder=&quot;dalla quotazione ufficiale&quot; inputmode=&quot;decimal&quot;&gt;&lt;/div&gt;
+     &lt;div class=&quot;ctl&quot; id=&quot;psPremDecC&quot; style=&quot;margin-top:12px&quot; hidden&gt;&lt;label for=&quot;psPremDec&quot;&gt;Di cui per il decesso (€ l&#x27;anno, facoltativo)&lt;/label&gt;&lt;input type=&quot;number&quot; id=&quot;psPremDec&quot; min=&quot;0&quot; step=&quot;1&quot; inputmode=&quot;decimal&quot;&gt;&lt;p class=&quot;note&quot;&gt;Serve solo per la detrazione: la parte decesso ha un suo limite di 530 €. Se resta vuoto si stima un undicesimo del premio.&lt;/p&gt;&lt;/div&gt;
+     &lt;p class=&quot;note&quot; id=&quot;psPremN&quot;&gt;Il premio dipende da età, rendita e versione e si ottiene dalla quotazione ufficiale (configuratore Alleanza). Con rendita oltre 2.000 € al mese, oltre al questionario sanitario servono visita medica, MMSE (Mini Mental State Examination) ed ecodoppler carotideo.&lt;/p&gt;
      &lt;div data-fase=&quot;pro&quot; style=&quot;border-top:1px dashed var(--line);margin-top:18px;padding-top:16px&quot;&gt;&lt;span class=&quot;lbl&quot;&gt;Verifica di adeguatezza&lt;/span&gt;
       &lt;div class=&quot;grid-2&quot; style=&quot;gap:12px;margin-top:8px&quot;&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;label for=&quot;psRisp&quot;&gt;Risparmio annuo dichiarato (€)&lt;/label&gt;&lt;input type=&quot;number&quot; id=&quot;psRisp&quot; min=&quot;0&quot; step=&quot;100&quot; inputmode=&quot;decimal&quot;&gt;&lt;/div&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;label for=&quot;psRedd&quot;&gt;Reddito annuo (€)&lt;/label&gt;&lt;input type=&quot;number&quot; id=&quot;psRedd&quot; min=&quot;0&quot; step=&quot;100&quot; inputmode=&quot;decimal&quot;&gt;&lt;/div&gt;&lt;/div&gt;
       &lt;div id=&quot;psAdeg&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
@@ -2533,7 +2533,7 @@ SHEETS.confronto = function(){
   function pc(x){ return String(x).replace(&#x27;.&#x27;, &#x27;,&#x27;) + &#x27;%&#x27;; }
   function stepper(oks){
     var cur = oks.indexOf(false); if(cur &lt; 0) cur = 3;
-    var nomi = [[&#x27;Assicurato&#x27;,&#x27;età e cliente&#x27;],[&#x27;Protezione&#x27;,&#x27;versione e rendita&#x27;],[&#x27;Premio&#x27;,&#x27;calcolato al mese&#x27;],[&#x27;Proposta&#x27;,&#x27;costo e detrazione&#x27;]], tg = [&#x27;#psS1&#x27;,&#x27;#psS2&#x27;,&#x27;#psS3&#x27;,&#x27;#psRes&#x27;];
+    var nomi = [[&#x27;Assicurato&#x27;,&#x27;età e cliente&#x27;],[&#x27;Protezione&#x27;,&#x27;versione e rendita&#x27;],[&#x27;Premio&#x27;,&#x27;dalla quotazione&#x27;],[&#x27;Proposta&#x27;,&#x27;costo e detrazione&#x27;]], tg = [&#x27;#psS1&#x27;,&#x27;#psS2&#x27;,&#x27;#psS3&#x27;,&#x27;#psRes&#x27;];
     $(&#x27;#psSteps&#x27;).innerHTML = nomi.map(function(n, i){ return &#x27;&lt;li data-t=&quot;&#x27; + tg[i] + &#x27;&quot; class=&quot;&#x27; + (oks[i] ? &#x27;ok&#x27; : (i === cur ? &#x27;cur&#x27; : &#x27;&#x27;)) + &#x27;&quot;&gt;&#x27; + n[0] + &#x27;&lt;small&gt;&#x27; + n[1] + &#x27;&lt;/small&gt;&lt;/li&gt;&#x27;; }).join(&#x27;&#x27;);
   }
   /* età assicurativa: dai 6 mesi compiuti si arrotonda per eccesso */
@@ -2548,12 +2548,10 @@ SHEETS.confronto = function(){
   var etaNasc = null;
   function disegna(){
     var v = VER[st.v], anni = 65 - st.eta, fr = st.fr;
-    var PR = premi(st.eta, st.ren), pmM = PR.base, mgM = v.mg ? MGM : 0, decM = v.dec ? 0.1 * (pmM + mgM) : 0, totM = pmM + mgM + decM;
-    var pm = pmM * 12, mg = mgM * 12, dec = decM * 12;
-    var tAnno = totM * 12, rata = totM;
-    $(&#x27;#psTre&#x27;).innerHTML = [[&#x27;base&#x27;,&#x27;Base&#x27;,&#x27;Rendita&#x27;],[&#x27;light&#x27;,&#x27;Light&#x27;,&#x27;+ malattie gravi&#x27;],[&#x27;full&#x27;,&#x27;Full&#x27;,&#x27;+ decesso&#x27;]].map(function(x){
-      return &#x27;&lt;button type=&quot;button&quot; data-v=&quot;&#x27; + x[0] + &#x27;&quot; aria-pressed=&quot;&#x27; + (x[0] === st.v) + &#x27;&quot;&gt;&lt;span&gt;&#x27; + x[1] + &#x27;&lt;/span&gt;&lt;b&gt;&#x27; + eur(Math.round(PR[x[0]])) + &#x27;&lt;/b&gt;&lt;small&gt;al mese · &#x27; + x[2] + &#x27;&lt;/small&gt;&lt;/button&gt;&#x27;;
-    }).join(&#x27;&#x27;);
+    /* premio annuo dalla quotazione ufficiale; per la Full la parte decesso, se non indicata, si stima in 1/11 (10% su rendita e malattie gravi) */
+    var tAnno = num(&#x27;#psPrem&#x27;), totM = tAnno / 12, pm = tAnno;
+    $(&#x27;#psPremDecC&#x27;).hidden = !v.dec;
+    var decStim = v.dec &amp;&amp; !(num(&#x27;#psPremDec&#x27;) &gt; 0), dec = v.dec ? Math.min(tAnno, num(&#x27;#psPremDec&#x27;) || tAnno / 11) : 0, mg = 0;
     $(&#x27;#psEtaV&#x27;).textContent = st.eta; $(&#x27;#psRenV&#x27;).textContent = eur(st.ren);
     $(&#x27;#psEtaN&#x27;).textContent = etaNasc != null &amp;&amp; (etaNasc &lt; 30 || etaNasc &gt; 60)
       ? &#x27;Età assicurativa &#x27; + etaNasc + &#x27; anni: fuori dai limiti di sottoscrizione (30–60 anni). Il valore sotto è solo indicativo.&#x27;
@@ -2563,7 +2561,7 @@ SHEETS.confronto = function(){
     stepper([st.tEta || !!st.nome, st.tProt, pm &gt; 0, pm &gt; 0]);
 
     /* detrazione: rendita e malattie gravi sul limite principale, decesso sul suo */
-    var altriD = num(&#x27;#psAltriD&#x27;), altri = Math.max(num(&#x27;#psAltri&#x27;), altriD), ltc = pm + mg;
+    var altriD = num(&#x27;#psAltriD&#x27;), altri = Math.max(num(&#x27;#psAltri&#x27;), altriD), ltc = tAnno - dec;
     var dispD = Math.max(0, LIMD - altriD), capLtc = Math.min(ltc, LIM), capDec = Math.min(dec, dispD);
     var disp = Math.max(0, LIM - altri), base = Math.min(capLtc + capDec, disp), detr = pm &gt; 0 ? base * 0.19 : 0;
     var tagliato = capLtc + capDec - base;
@@ -2585,28 +2583,25 @@ SHEETS.confronto = function(){
       &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Decesso&lt;/span&gt;&lt;b&gt;&#x27; + (v.dec ? &#x27;Capitale pari ai premi versati&#x27; : &#x27;Non incluso&#x27;) + &#x27;&lt;/b&gt;&lt;/div&gt;&#x27;;
     if(pm &gt; 0){
       var mesi = Math.ceil(tot / st.ren);
-      h += &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Premio rendita&lt;/span&gt;&lt;b&gt;&#x27; + eur(pmM, true) + &#x27; al mese&lt;/b&gt;&lt;/div&gt;&#x27; +
-        (v.mg ? &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Premio malattie gravi&lt;/span&gt;&lt;b&gt;&#x27; + eur(mgM, true) + &#x27; al mese&lt;/b&gt;&lt;/div&gt;&#x27; : &#x27;&#x27;) +
-        (v.dec ? &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Premio decesso (10% dei premi)&lt;/span&gt;&lt;b&gt;&#x27; + eur(decM, true) + &#x27; al mese&lt;/b&gt;&lt;/div&gt;&#x27; : &#x27;&#x27;) +
-        &#x27;&lt;div class=&quot;row tot&quot;&gt;&lt;span&gt;Premio mensile totale&lt;/span&gt;&lt;b&gt;&#x27; + eur(Math.round(totM)) + &#x27; al mese&lt;/b&gt;&lt;/div&gt;&#x27; +
-        &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Pari a&lt;/span&gt;&lt;b&gt;&#x27; + eur(tAnno / 365, true) + &#x27; al giorno&lt;/b&gt;&lt;/div&gt;&#x27; +
+      h += &#x27;&lt;div class=&quot;row tot&quot;&gt;&lt;span&gt;Premio annuo&lt;/span&gt;&lt;b&gt;&#x27; + eur(tAnno, true) + &#x27;&lt;/b&gt;&lt;/div&gt;&#x27; +
+        &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Pari a&lt;/span&gt;&lt;b&gt;&#x27; + eur(totM, true) + &#x27; al mese · &#x27; + eur(tAnno / 365, true) + &#x27; al giorno&lt;/b&gt;&lt;/div&gt;&#x27; +
         &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Premi versati nel piano&lt;/span&gt;&lt;b&gt;&#x27; + eur(tot) + &#x27;&lt;/b&gt;&lt;/div&gt;&#x27; +
         (detr &gt; 0 ? &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Detrazione al 19% ogni anno&lt;/span&gt;&lt;b&gt;&#x27; + eur(detr, true) + &#x27;&lt;/b&gt;&lt;/div&gt;&#x27; +
-        &#x27;&lt;div class=&quot;row tot&quot;&gt;&lt;span&gt;Costo netto dopo la detrazione&lt;/span&gt;&lt;b&gt;&#x27; + eur(totM - detr / 12, true) + &#x27; al mese&lt;/b&gt;&lt;/div&gt;&#x27; : &#x27;&#x27;) +
+        &#x27;&lt;div class=&quot;row tot&quot;&gt;&lt;span&gt;Costo netto al mese, dopo la detrazione&lt;/span&gt;&lt;b&gt;&#x27; + eur(totM - detr / 12, true) + &#x27;&lt;/b&gt;&lt;/div&gt;&#x27; : &#x27;&#x27;) +
         &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Adeguatezza&lt;/span&gt;&lt;b&gt;&#x27; + adTxt + &#x27;&lt;/b&gt;&lt;/div&gt;&#x27; +
         &#x27;&lt;div class=&quot;pitch&quot;&gt;Per ogni &lt;em&gt;1 € di premio al mese&lt;/em&gt; proteggi &lt;em&gt;&#x27; + (st.ren / totM).toLocaleString(&#x27;it-IT&#x27;, {maximumFractionDigits:0}) + &#x27; €&lt;/em&gt; di rendita mensile. Se serve, bastano &lt;em&gt;&#x27; + mesi + &#x27; mesi&lt;/em&gt; di rendita per riavere tutti i premi versati.&lt;/div&gt;&#x27;;
     } else {
-      h += &#x27;&lt;div class=&quot;empty&quot;&gt;Inserisci il premio annuo della rendita al passo 3: complementari, rate, totali, adeguatezza e detrazione compaiono subito.&lt;/div&gt;&#x27;;
+      h += &#x27;&lt;div class=&quot;empty&quot;&gt;Inserisci al passo 3 il premio annuo della quotazione ufficiale: rate, adeguatezza e detrazione compaiono subito.&lt;/div&gt;&#x27;;
     }
-    h += &#x27;&lt;div class=&quot;mini&quot;&gt;Premio mensile calcolato con la tariffa del configuratore Alleanza (arrotondamenti al centesimo possono differire di 1 €). Proposta illustrativa non vincolante: fa fede l\&#x27;offerta ufficiale della Compagnia.&lt;/div&gt;&#x27;;
+    h += &#x27;&lt;div class=&quot;mini&quot;&gt;Premio dalla quotazione ufficiale Alleanza. Proposta illustrativa non vincolante: fa fede l\&#x27;offerta ufficiale della Compagnia.&lt;/div&gt;&#x27;;
     $(&#x27;#psRes&#x27;).innerHTML = h;
     tween($(&#x27;#psRenOut&#x27;), st.ren, eur);
 
     var f = &#x27;&lt;div class=&quot;k&quot;&gt;Detrazione stimata ogni anno&lt;/div&gt;&lt;div class=&quot;v&quot;&gt;&lt;span id=&quot;psDetr&quot;&gt;&lt;/span&gt;&lt;/div&gt;&#x27;;
     if(pm &gt; 0){
-      f += &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Premi versati in un anno (&#x27; + eur(totM, true) + &#x27; × 12)&lt;/span&gt;&lt;b&gt;&#x27; + eur(tAnno, true) + &#x27;&lt;/b&gt;&lt;/div&gt;&#x27; +
-        &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Rendita&#x27; + (mg &gt; 0 ? &#x27; e malattie gravi&#x27; : &#x27;&#x27;) + &#x27; (non autosufficienza): &#x27; + eur(ltc, true) + &#x27;, detraibili fino a 1.291,14 €&lt;/span&gt;&lt;b&gt;&#x27; + eur(capLtc, true) + &#x27;&lt;/b&gt;&lt;/div&gt;&#x27; +
-        (dec &gt; 0 ? &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Decesso (TCM): &#x27; + eur(dec, true) + &#x27;, detraibili fino a &#x27; + (altriD &gt; 0 ? eur(dispD, true) + &#x27; (530 € meno gli altri premi rischio morte)&#x27; : &#x27;530 €&#x27;) + &#x27;&lt;/span&gt;&lt;b&gt;&#x27; + eur(capDec, true) + &#x27;&lt;/b&gt;&lt;/div&gt;&#x27; : &#x27;&#x27;) +
+      f += &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Premio annuo&lt;/span&gt;&lt;b&gt;&#x27; + eur(tAnno, true) + &#x27;&lt;/b&gt;&lt;/div&gt;&#x27; +
+        &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Rendita&#x27; + (v.mg ? &#x27; e malattie gravi&#x27; : &#x27;&#x27;) + &#x27; (non autosufficienza): &#x27; + eur(ltc, true) + &#x27;, detraibili fino a 1.291,14 €&lt;/span&gt;&lt;b&gt;&#x27; + eur(capLtc, true) + &#x27;&lt;/b&gt;&lt;/div&gt;&#x27; +
+        (dec &gt; 0 ? &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Decesso (TCM)&#x27; + (decStim ? &#x27;, stimato&#x27; : &#x27;&#x27;) + &#x27;: &#x27; + eur(dec, true) + &#x27;, detraibili fino a &#x27; + (altriD &gt; 0 ? eur(dispD, true) + &#x27; (530 € meno gli altri premi rischio morte)&#x27; : &#x27;530 €&#x27;) + &#x27;&lt;/span&gt;&lt;b&gt;&#x27; + eur(capDec, true) + &#x27;&lt;/b&gt;&lt;/div&gt;&#x27; : &#x27;&#x27;) +
         (tagliato &gt; 0.005 ? &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Oltre il tetto complessivo di 1.291,14 €&#x27; + (altri &gt; 0 ? &#x27; (già usati &#x27; + eur(Math.min(altri, LIM), true) + &#x27; da altre polizze)&#x27; : &#x27;&#x27;) + &#x27;&lt;/span&gt;&lt;b&gt;−&#x27; + eur(tagliato, true) + &#x27;&lt;/b&gt;&lt;/div&gt;&#x27; : &#x27;&#x27;) +
         &#x27;&lt;div class=&quot;row&quot;&gt;&lt;span&gt;Base su cui si calcola il 19%&lt;/span&gt;&lt;b&gt;&#x27; + eur(base, true) + &#x27;&lt;/b&gt;&lt;/div&gt;&#x27; +
         &#x27;&lt;div class=&quot;row tot&quot;&gt;&lt;span&gt;Detrazione al 19%&lt;/span&gt;&lt;b&gt;&#x27; + eur(detr, true) + &#x27;&lt;/b&gt;&lt;/div&gt;&#x27; +
@@ -2638,12 +2633,11 @@ SHEETS.confronto = function(){
     };
     $(&#x27;#psCards&#x27;).innerHTML =
       card(&#x27;base&#x27;,&#x27;Base&#x27;,[&#x27;Rendita mensile vitalizia, da 500 a 3.000 €&#x27;,&#x27;Rivalutata ogni anno&#x27;,&#x27;Perdita dell\&#x27;autosufficienza: atti quotidiani e capacità mentali&#x27;]) +
-      card(&#x27;light&#x27;,&#x27;Light&#x27;,[&#x27;Tutto della Base&#x27;,&#x27;5.000 € alla diagnosi di malattia grave (Alzheimer, Parkinson, SLA, insufficienza renale cronica, cardiopatie gravi, ictus)&#x27;,&#x27;Care manager telefonico e assistenza domiciliare integrata fino a 120 giorni&#x27;,&#x27;Sono 10 € al mese in più&#x27;]) +
-      card(&#x27;full&#x27;,&#x27;Full&#x27;,[&#x27;Tutto della Light&#x27;,&#x27;In caso di premorienza, ai beneficiari un capitale pari ai premi versati fino al decesso&#x27;,&#x27;Il premio aggiuntivo è il 10% dei premi di rendita e malattie gravi&#x27;]);
+      card(&#x27;light&#x27;,&#x27;Light&#x27;,[&#x27;Tutto della Base&#x27;,&#x27;5.000 € alla diagnosi di malattia grave (Alzheimer, Parkinson, SLA, insufficienza renale cronica, cardiopatie gravi, ictus)&#x27;,&#x27;Care manager telefonico e assistenza domiciliare integrata fino a 120 giorni&#x27;]) +
+      card(&#x27;full&#x27;,&#x27;Full&#x27;,[&#x27;Tutto della Light&#x27;,&#x27;In caso di premorienza, ai beneficiari un capitale pari ai premi versati fino al decesso&#x27;]);
     fiume();
   }
   $(&#x27;#psVer&#x27;).addEventListener(&#x27;click&#x27;, function(e){ var b = e.target.closest(&#x27;button&#x27;); if(b){ st.v = b.getAttribute(&#x27;data-v&#x27;); st.tProt = true; disegna(); } });
-  $(&#x27;#psTre&#x27;).addEventListener(&#x27;click&#x27;, function(e){ var b = e.target.closest(&#x27;button&#x27;); if(b){ st.v = b.getAttribute(&#x27;data-v&#x27;); st.tProt = true; disegna(); } });
   $(&#x27;#psEta&#x27;).addEventListener(&#x27;input&#x27;, function(e){ st.eta = +e.target.value; st.tEta = true; etaNasc = null; $(&#x27;#psNasc&#x27;).value = &#x27;&#x27;; disegna(); });
   $(&#x27;#psNasc&#x27;).addEventListener(&#x27;change&#x27;, function(e){
     var a = etaAss(e.target.value); etaNasc = a; if(a == null){ disegna(); return; }
@@ -2652,7 +2646,7 @@ SHEETS.confronto = function(){
   $(&#x27;#psRen&#x27;).addEventListener(&#x27;input&#x27;, function(e){ st.ren = +e.target.value; st.tProt = true; disegna(); });
   $(&#x27;#psNome&#x27;).addEventListener(&#x27;input&#x27;, function(e){ st.nome = e.target.value.trim(); disegna(); });
   if(DETQ.ok &amp;&amp; !$(&#x27;#psAltri&#x27;).value){ $(&#x27;#psAltri&#x27;).value = Math.round(DETQ.d530 + DETQ.dsem + DETQ.dltc) || &#x27;&#x27;; $(&#x27;#psAltriD&#x27;).value = Math.round(DETQ.d530 + DETQ.dsem) || &#x27;&#x27;; }
-  [&#x27;#psAltri&#x27;,&#x27;#psAltriD&#x27;,&#x27;#psRisp&#x27;,&#x27;#psRedd&#x27;,&#x27;#psVers&#x27;].forEach(function(id){ $(id).addEventListener(&#x27;input&#x27;, disegna); });
+  [&#x27;#psAltri&#x27;,&#x27;#psAltriD&#x27;,&#x27;#psRisp&#x27;,&#x27;#psRedd&#x27;,&#x27;#psVers&#x27;,&#x27;#psPrem&#x27;,&#x27;#psPremDec&#x27;].forEach(function(id){ $(id).addEventListener(&#x27;input&#x27;, disegna); });
   $(&#x27;#psSteps&#x27;).addEventListener(&#x27;click&#x27;, function(e){ var li = e.target.closest(&#x27;li&#x27;); if(li){ var t = $(li.getAttribute(&#x27;data-t&#x27;)); if(t) t.scrollIntoView({behavior: REDUCED ? &#x27;auto&#x27; : &#x27;smooth&#x27;, block:&#x27;center&#x27;}); } });
   $(&#x27;#psVaiPrem&#x27;).addEventListener(&#x27;click&#x27;, function(e){ e.preventDefault(); $(&#x27;#psS3&#x27;).scrollIntoView({behavior: REDUCED ? &#x27;auto&#x27; : &#x27;smooth&#x27;, block:&#x27;center&#x27;}); });
   /* ---------- fiume del reddito: entrate come affluenti, uscite come rami ---------- */
@@ -2779,7 +2773,7 @@ SHEETS.confronto = function(){
       shSec(&#x27;Se smetti di versare&#x27;, &#x27;&lt;p&gt;Dopo un numero minimo di annualità la copertura resta in vigore con una rendita ridotta, proporzionata ai premi versati. Non sono previsti riscatti; riattivazione possibile entro un anno dalla prima rata non versata.&lt;/p&gt;&#x27; + $(&#x27;#psRid&#x27;).innerHTML) +
       shSec(&#x27;Esenzioni&#x27;, &#x27;&lt;ul class=&quot;chk&quot;&gt;&lt;li&gt;Rendita e somma per malattie gravi esenti da IRPEF&lt;/li&gt;&lt;li&gt;Impignorabili e insequestrabili nei limiti di legge&lt;/li&gt;&lt;li&gt;Capitale ai beneficiari escluso dall\&#x27;asse ereditario e dall\&#x27;IRPEF&lt;/li&gt;&lt;li&gt;Detrazione del 19% anche per l\&#x27;assicurato fiscalmente a carico&lt;/li&gt;&lt;/ul&gt;&#x27;) +
       shAccSecs(&#x27;#view-persempre&#x27;) +
-      shSec(&#x27;Il contratto in breve&#x27;, &#x27;&lt;p&gt;Vita intera. Premio mensile costante, versato fino ai 65 anni (piano di 65 − età anni). Ingresso tra 30 e 60 anni; rendita da 500 a 3.000 € al mese, a multipli di 250 €. Malattie gravi, decesso e assistenza valgono per la durata del piano di versamento.&lt;/p&gt;&#x27;) +
+      shSec(&#x27;Il contratto in breve&#x27;, &#x27;&lt;p&gt;Vita intera. Premio annuo costante (anche in rate), versato fino ai 65 anni (piano di 65 − età anni). Ingresso tra 30 e 60 anni; rendita da 500 a 3.000 € al mese, a multipli di 250 €. Malattie gravi, decesso e assistenza valgono per la durata del piano di versamento.&lt;/p&gt;&#x27;) +
       shFoot(FONTI);
     return &#x27;&lt;div class=&quot;pg&quot;&gt;&#x27; + p1 + &#x27;&lt;/div&gt;&lt;div class=&quot;pg&quot;&gt;&#x27; + p2 + &#x27;&lt;/div&gt;&#x27;;
   };
@@ -3330,7 +3324,7 @@ function prem(sol, pkg, f){
   }
   SHEETS.semplice = function(){
     riepilogo();
-    if(PROPOSTE.length || integ.on) return prospettoProposte();
+    if(PROPOSTE.length || integ.on || (window.__mixProposta &amp;&amp; persone.some(haSol))) return prospettoProposte();
     var list = daSpiegare(); if(!list.length) list = KS.slice();
     var intSec = PROPOSTE.length ? shSec(&#x27;Le proposte a confronto&#x27;, tabConfronto(colonne()) + &#x27;&lt;p class=&quot;nota&quot;&gt;Premi mensili da tabella tariffaria; massimali e diarie del pacchetto più alto scelto nella proposta. Stima non vincolante: fanno fede DIP e condizioni di assicurazione.&lt;/p&gt;&#x27;, &#x27;wide&#x27;) :
       (integ.on ? shSec(&#x27;Integrazione della polizza in corso&#x27;, &#x27;&lt;div class=&quot;result&quot;&gt;&#x27; + $(&#x27;#smRes&#x27;).innerHTML + &#x27;&lt;/div&gt;&#x27;) : &#x27;&#x27;);
@@ -4127,6 +4121,10 @@ function dividi(g, trabocca){
 }
 window.__salMix = function(inv, sal, cliente, opz){
   opz = opz || {};
+  window.__mixProposta = !opz.spiega;
+  try{ return salMix0(inv, sal, cliente, opz); } finally { window.__mixProposta = false; }
+};
+function salMix0(inv, sal, cliente, opz){
   var COMP = !!opz.completo, ZU = opz.zoom || 1, ETI = opz.spiega ? &#x27;come funziona&#x27; : (COMP ? &#x27;prospetto&#x27; : &#x27;sintesi&#x27;);
   var nome = cliente || &#x27;&#x27;;
   var NOMI = {confronto: [&#x27;Perché parlarne&#x27;, &#x27;I dati della salute in Italia&#x27;], persempre: [&#x27;PerSempre&#x27;, &#x27;Non autosufficienza&#x27;], peramore: [&#x27;PerAmore&#x27;, &#x27;Protezione della famiglia&#x27;], semplice: [&#x27;Semplice&#x27;, &#x27;Infortuni e malattia&#x27;], wsalute: [&#x27;WSalute&#x27;, &#x27;Sanità integrativa&#x27;], casasemplice: [&#x27;Casa Semplice&#x27;, &#x27;Casa e vita privata&#x27;]};
@@ -4263,8 +4261,8 @@ window.__salMix = function(inv, sal, cliente, opz){
       }
       var primoDiArea = true;
       A.items.forEach(function(it){
-        /* una nuova soluzione non comincia in fondo a una pagina già piena per metà: va sulla pagina dopo */
-        if(it.b &amp;&amp; cur.n &gt; 0 &amp;&amp; usato() &gt; 0.5) nuova(A.mini, A);
+        /* una nuova soluzione non comincia in fondo a una pagina già piena per più di un terzo: va sulla pagina dopo */
+        if(it.b &amp;&amp; cur.n &gt; 0 &amp;&amp; usato() &gt; 0.35) nuova(A.mini, A);
         var g = document.createElement(&#x27;div&#x27;); g.className = &#x27;mx-grp z-&#x27; + A.ar.replace(&#x27;a-&#x27;, &#x27;&#x27;); g.innerHTML = it.b + it.h;
         cur.inn.insertBefore(g, cur.foot); cur.n++;
         if(trabocca()){
@@ -4374,7 +4372,7 @@ window.__salMix = function(inv, sal, cliente, opz){
   dets.forEach(function(d, i){ d.open = aperti[i]; });
   if(eraSafari) document.documentElement.classList.add(&#x27;safari&#x27;);
   return html;
-};
+}
 
 /* ---------- dashboard unica: le cifre chiave di ogni soluzione per &quot;Il piano in cifre&quot; ---------- */
 window.__salCifre = function(v){
@@ -4385,7 +4383,7 @@ window.__salCifre = function(v){
     var R = righe(&#x27;#psRes&#x27;), acc = [];
     if(R[&#x27;Malattie gravi&#x27;] &amp;&amp; !/Non incl/i.test(R[&#x27;Malattie gravi&#x27;])) acc.push(&#x27;Malattie gravi: &#x27; + R[&#x27;Malattie gravi&#x27;]);
     if(R[&#x27;Decesso&#x27;] &amp;&amp; !/Non incl/i.test(R[&#x27;Decesso&#x27;])) acc.push(&#x27;Decesso: &#x27; + R[&#x27;Decesso&#x27;].toLowerCase());
-    return {premio: soloImporto(R[&#x27;Premio mensile totale&#x27;]), unita: &#x27;al mese&#x27;, cop: soloImporto(testo(&#x27;#psRes .v&#x27;)), copU: &#x27;al mese&#x27;, copNota: &#x27;di rendita a vita, se si perde l\&#x27;autosufficienza&#x27;, acc: acc};
+    return {premio: soloImporto(R[&#x27;Pari a&#x27;]), unita: &#x27;al mese&#x27;, cop: soloImporto(testo(&#x27;#psRes .v&#x27;)), copU: &#x27;al mese&#x27;, copNota: &#x27;di rendita a vita, se si perde l\&#x27;autosufficienza&#x27;, acc: acc};
   }
   if(v === &#x27;peramore&#x27;){
     var t = document.createElement(&#x27;div&#x27;); try{ t.innerHTML = SHEETS.peramore(); }catch(e){}
@@ -13110,7 +13108,7 @@ $('#indietro3').addEventListener('click', function(){ mostraPasso(percorsoSolo ?
 /* ---------- passo 3: i dati di ogni soluzione, collegati ai controlli della dashboard ---------- */
 var CAMPI = {
   confronto: [{l: 'Regione', t: 'select', s: '#ctRegSel'}],
-  persempre: [{l: 'Cliente', t: 'text', s: '#psNome'}, {l: 'Età dell\'assicurato', t: 'range', s: '#psEta', u: ' anni'}, {l: 'Versione', t: 'seg', s: '#psVer'}, {l: 'Rendita mensile', t: 'range', s: '#psRen', u: ' €', m: true}],
+  persempre: [{l: 'Cliente', t: 'text', s: '#psNome'}, {l: 'Età dell\'assicurato', t: 'range', s: '#psEta', u: ' anni'}, {l: 'Versione', t: 'seg', s: '#psVer'}, {l: 'Rendita mensile', t: 'range', s: '#psRen', u: ' €', m: true}, {l: 'Premio annuo (€)', t: 'number', s: '#psPrem'}],
   peramore: [{l: 'Cliente', t: 'text', s: '#paNome'}, {l: 'Età dell\'assicurato', t: 'range', s: '#paEta', u: ' anni'}, {l: 'Capitale assicurato', t: 'range', s: '#paCap', u: ' €', m: true}, {l: 'Durata', t: 'range', s: '#paDur', u: ' anni'}, {l: 'Versione', t: 'seg', s: '#paVer'}, {l: 'Premio annuo (€)', t: 'number', s: '#paPrem'}],
   semplice: [{l: 'Cliente', t: 'text', s: '#smNome'}, {l: 'Proposta', t: 'seg', s: '#smTipo'}, {l: 'Decorrenza della polizza in corso', t: 'date', s: '#smDec', se: function(d){ var b = d.querySelector('#smTipo [data-t="int"]'); return b && b.getAttribute('aria-pressed') === 'true'; }}, {vai: true}],
   wsalute: [{l: 'Cliente', t: 'text', s: '#wsNome'}, {vai: true}],
@@ -13176,10 +13174,41 @@ function confDi(v){
   }catch(e){}
   return R;
 }
+/* più proposte della stessa soluzione: la sezione con il riepilogo della sola proposta corrente si toglie (c'è già il confronto),
+   le sezioni che cambiano da una proposta all'altra si ripetono, ciascuna con il nome della proposta */
+function sezioniVarianti(h, altri, cols){
+  var t = document.createElement('div'); t.innerHTML = h;
+  var al = altri.map(function(x){ var q = document.createElement('div'); q.innerHTML = x || ''; return q; });
+  var norm = function(x){ return String(x || '').replace(/\s(id|style)="[^"]*"/g, '').replace(/\s+/g, ' '); };
+  var titolo = function(sec){ var h3 = sec.querySelector('h3'); return h3 ? h3.textContent.replace(/\s+/g, ' ').trim() : ''; };
+  $$('.sh-sec', t).forEach(function(sec, k){
+    var tit = titolo(sec);
+    if(k === 0 && /proposta|preventivo/i.test(tit)){ sec.parentNode.removeChild(sec); return; }
+    var altre = al.map(function(q){ return $$('.sh-sec', q).filter(function(x){ return titolo(x) === tit; })[0] || null; });
+    if(altre.every(function(x){ return x && norm(x.innerHTML) === norm(sec.innerHTML); })) return;
+    var fr = document.createDocumentFragment();
+    altre.concat([sec]).forEach(function(x, i){ if(!x) return; var c = x.cloneNode(true), h3 = c.querySelector('h3'); if(h3) h3.textContent = tit + ' · ' + cols[i].nome; fr.appendChild(c); });
+    sec.parentNode.replaceChild(fr, sec);
+  });
+  return t.innerHTML;
+}
 /* tabella di confronto corta: in tabella solo quello che cambia, sotto in una riga quello che è uguale in tutte */
 function tabConfrontoShell(cols, dettaglio){
   var lab = []; cols.forEach(function(c){ c.righe.forEach(function(r){ if(lab.indexOf(r[0]) < 0) lab.push(r[0]); }); });
   var val = function(c, l){ var r = c.righe.filter(function(x){ return x[0] === l; })[0]; return r ? r[1] : '—'; };
+  /* «In evidenza» e «Assicurato» ripetono cifre già in altre righe (capitale, età, durata) */
+  var ripete = function(l){
+    return cols.every(function(c){
+      var v = val(c, l); if(v === '—') return true;
+      var altre = c.righe.filter(function(x){ return x[0] !== l; });
+      if(l === 'In evidenza'){ var m = /^[\d.,]+\s*€/.exec(v); return !!m && altre.some(function(x){ return String(x[1]).trim() === m[0].trim(); }); }
+      var testi = altre.map(function(x){ return (x[0] + ' ' + x[1]).toLowerCase(); });
+      return v.split(' · ').every(function(p){ p = p.trim().toLowerCase(); return p && testi.some(function(a){ return a.indexOf(p) >= 0; }); });
+    });
+  };
+  lab = lab.filter(function(l){ return !((l === 'In evidenza' || l === 'Assicurato') && ripete(l)); });
+  var PREZZO = /^(premio|pari a|detrazione|costo netto|premi versati|rata)/i;
+  lab = lab.filter(function(l){ return !PREZZO.test(l); }).concat(lab.filter(function(l){ return PREZZO.test(l); }));
   var diversi = lab.filter(function(l){ return cols.some(function(c){ return val(c, l) !== val(cols[0], l); }); });
   var calc = function(l){ return cols.some(function(c){ return c.righe.some(function(x){ return x[0] === l && x[2] === 'calc'; }); }); };
   var uguali = lab.filter(function(l){ return diversi.indexOf(l) < 0 && val(cols[0], l) !== '—' && !calc(l); });
@@ -13494,6 +13523,8 @@ function pianoInCifre(l){
   var schede = [], mese = 0, unico = 0, quotare = false;
   l.forEach(function(v){
     var c = cifreDi(v); if(!c) return;
+    var nv = v === 'semplice' ? (function(){ try{ return fSal.contentWindow.__smElenco().length; }catch(e){ return 0; } })() : (VARIANTI[v] || []).length;
+    if(nv){ c.acc = ['Valori della ' + lettera(nv) + ': il confronto con ' + (nv === 1 ? 'la Proposta A' : 'le altre ' + nv + ' proposte') + ' è nel dettaglio'].concat(c.acc || []); }
     if(c.mensile != null) mese += c.mensile; else if(c.unita === 'al mese') mese += numero(c.premio);
     if(c.unico) unico += c.unico;
     var TIT = {pip: 'Previdenza complementare', smart: 'Accumulo', valore: 'Investimento', oro: 'Investimento prudente', persempre: 'Copertura non autosufficienza', peramore: 'Copertura vita', semplice: 'Copertura infortuni e malattia', wsalute: 'Copertura sanitaria', casasemplice: 'Copertura casa'};
@@ -13520,6 +13551,8 @@ function intro(l, cliente, spie){
      (prot.length ? 'Ogni soluzione copre un rischio diverso: insieme mettono al riparo reddito, patrimonio e salute.' : 'Le soluzioni si completano: stabilità e potenziale di crescita, con la flessibilità di adattarsi nel tempo.'));
   function scheda(v, i){
     var x = info(v), r = RUOLI[v] || ['', ''], k = spie ? [] : chiave(v);
+    var nv = v === 'semplice' ? (function(){ try{ return fSal.contentWindow.__smElenco().length; }catch(e){ return 0; } })() : (VARIANTI[v] || []).length;
+    if(nv && !spie) k = [(nv + 1) + ' proposte a confronto', 'Valori della ' + lettera(nv)].concat(k);
     return '<div class="ic"><div class="in">' + (i + 1) + '</div><div><div class="ir">' + r[0] + '</div><h3>' + x[1] + (spie ? versioneDi(v) : '') + '</h3><p>' + r[1] + '</p>' +
       (k.length ? '<div class="ik">' + k.map(function(t){ return '<span>' + esc(t) + '</span>'; }).join('') + '</div>' : '') + '</div></div>';
   }
@@ -13562,7 +13595,7 @@ function componiParti(){
       var n = conta(v), ws = fSal.contentWindow;
       var cols = n ? (VARIANTI[v] || []).map(function(x, i){ return {nome: lettera(i), righe: x.conf || []}; }).concat([{nome: lettera(n), righe: confDi(v)}]) : null;
       if(spie){ var o = ws.__salSpiega(v); if(o){ if(cols) o.sezioni.unshift({t: 'Le proposte a confronto', p: 1, parti: [['html', tabConfrontoShell(cols)]]}); salD.push(o); } }
-      else if(cols){ var h = ''; try{ h = ws.__salSheets[v](); }catch(e){} salD.push({v: v, html: '<div class="sh-sec"><h3>Le proposte a confronto</h3><div class="c">' + tabConfrontoShell(cols) + '</div></div>' + h, nome: nome(v)}); }
+      else if(cols){ var h = ''; try{ h = ws.__salSheets[v](); }catch(e){} h = sezioniVarianti(h, (VARIANTI[v] || []).map(function(x){ return x.html || ''; }), cols); salD.push({v: v, html: '<div class="sh-sec"><h3>Le proposte a confronto</h3><div class="c">' + tabConfrontoShell(cols) + '</div></div>' + h, nome: nome(v)}); }
       else salD.push(v);
     });
     var html = fSal.contentWindow.__salMix(dati, salD, cliente, {completo: comp, spiega: spie, zoom: zoomScelto, prev: datiP});
