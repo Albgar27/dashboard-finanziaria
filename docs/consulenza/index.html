@@ -13316,7 +13316,7 @@ function disegnaDati(){
       return '<label class="cmp"><span>' + c.l + '</span><input type="' + c.t + '" id="' + id + '" data-v="' + v + '" data-i="' + i + '" value="' + esc(el.value) + '"' + (el.min ? ' min="' + el.min + '"' : '') + (el.step ? ' step="' + el.step + '"' : '') + ' placeholder="' + esc(el.placeholder || '') + '"></label>';
     }).join('');
     if(v === 'pip' && window.__pip){ var PP = window.__pip.P;
-      corpo = '<label class="cmp"><span>Reddito lordo annuo (€)</span><input type="number" data-pip="red" value="' + PP.red + '" step="1000"></label>' +
+      corpo = '<label class="cmp"><span>Reddito imponibile annuo (€)</span><input type="number" data-pip="red" value="' + PP.red + '" step="1000"></label>' +
         '<label class="cmp"><span>Contributo volontario all\'anno (€)</span><input type="number" data-pip="contr" value="' + PP.contr + '" step="100"></label>' +
         '<label class="cmp"><span>Anni alla pensione: <b class="val">' + PP.anni + '</b></span><input type="range" data-pip="anni" min="5" max="45" step="1" value="' + PP.anni + '"></label>' +
         '<label class="cmp"><span>Rendimento ipotetico: <b class="val">' + String(PP.r).replace('.', ',') + '%</b></span><input type="range" data-pip="r" min="0" max="6" step="0.5" value="' + PP.r + '"></label>' +
@@ -14146,9 +14146,8 @@ function esc(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(
 /* IRPEF 2026 (L. 199/2025): 23% fino a 28.000 €, 33% fino a 50.000 €, 43% oltre */
 function marginale(red){ return red <= 28000 ? 0.23 : (red <= 50000 ? 0.33 : 0.43); }
 function irpef(red){ return Math.min(red, 28000) * 0.23 + Math.max(0, Math.min(red, 50000) - 28000) * 0.33 + Math.max(0, red - 50000) * 0.43; }
-/* reddito imponibile IRPEF: per i dipendenti il lordo meno i contributi INPS a carico del lavoratore (9,19%) */
-var INPS_DIP = 0.0919;
-function imponibile(red){ return P.lav === 'dip' ? red * (1 - INPS_DIP) : red; }
+/* il reddito inserito è l'imponibile IRPEF: lo scaglione e l'aliquota marginale si leggono direttamente su quello */
+function imponibile(red){ return red; }
 /* IRPEF risparmiata con la deduzione: differenza esatta, anche quando la deduzione scavalca uno scaglione */
 function rispIrpef(red, ded){ var i = imponibile(red); return irpef(i) - irpef(Math.max(0, i - ded)); }
 function aliqPrest(n){ return n <= 15 ? 0.15 : Math.max(0.09, 0.15 - 0.003 * (n - 15)); }
@@ -14233,7 +14232,7 @@ var TABS = [['piano', 'Il piano'], ['fisco', 'Fisco anno per anno'], ['tfr', 'TF
 function controlli(){
   var h = '<div class="pp-lab">Chi è</div>' + seg('lav', [['dip', 'Dipendente'], ['aut', 'Autonomo'], ['for', 'Forfettario']], P.lav) +
     sl('eta', 'Età oggi', 18, 64, 1, P.eta, FMT.eta) + sl('etaP', 'Età alla pensione', Math.max(57, P.eta + 5), 71, 1, Math.max(P.etaP, P.eta + 5), FMT.etaP) +
-    num('red', 'Reddito lordo annuo (€)', P.red, 1000) + num('contr', 'Contributo volontario all\'anno (€)', P.contr, 100, e0(P.contr / 12) + ' al mese');
+    num('red', 'Reddito imponibile annuo (€)', P.red, 1000) + num('contr', 'Contributo volontario all\'anno (€)', P.contr, 100, e0(P.contr / 12) + ' al mese');
   if(dip()) h += '<div class="pp-row2">' + num('dat', 'Contributo datore (% RAL)', P.dat, 0.1) + num('bus', 'Tuo contributo in busta (% RAL)', P.bus, 0.1) + '</div>' +
     '<label class="mo-chk"><input type="checkbox" data-pp="tfr"' + (P.tfr ? ' checked' : '') + '> Il TFR va nel fondo (circa ' + e0(P.red * TFR_Q) + ' l\'anno)</label>';
   h += '<div class="pp-lab">Dove si investe</div>' + seg('comp', [['lc', 'Life Cycle'], ['gar', 'Garantita'], ['bil', 'Bilanciata'], ['azi', 'Azionaria'], ['lib', 'Ipotesi libera']], P.comp);
@@ -14399,7 +14398,7 @@ window.__pip = {
       S.push({t: 'Da sapere', p: 2, parti: [['punti', SAPERE]]});
       return {v: 'pip', nome: 'Alleata Previdenza', tag: 'Previdenza complementare', sezioni: S};
     }
-    var scelte = [['Età', P.eta + ' anni', 'pensione a ' + P.etaP + ' (' + (anno + c.n) + ')'], ['Contributo volontario', eu(P.contr) + ' l\'anno', eu(P.contr / 12, true) + ' al mese'], ['Reddito lordo', eu(P.red), P.lav === 'for' ? 'regime forfettario' : 'aliquota IRPEF ' + Math.round(c.m * 100) + '%'], ['Comparto', nomeComp(), P.comp === 'lib' ? pc(P.r) + ' ipotetico' : 'rendimenti medi degli ultimi 10 anni']];
+    var scelte = [['Età', P.eta + ' anni', 'pensione a ' + P.etaP + ' (' + (anno + c.n) + ')'], ['Contributo volontario', eu(P.contr) + ' l\'anno', eu(P.contr / 12, true) + ' al mese'], ['Reddito imponibile', eu(P.red), P.lav === 'for' ? 'regime forfettario' : 'aliquota IRPEF ' + Math.round(c.m * 100) + '%'], ['Comparto', nomeComp(), P.comp === 'lib' ? pc(P.r) + ' ipotetico' : 'rendimenti medi degli ultimi 10 anni']];
     if(dip()) scelte.push(['TFR', P.tfr ? 'Nel fondo' : 'Non conferito', P.tfr ? 'circa ' + eu(c.T) + ' l\'anno' : ''], ['Contributo del datore', c.D ? eu(c.D) + ' l\'anno' : 'nessuno', c.D ? pc(P.dat) + ' della retribuzione' : '']);
     scelte.push(['Accessoria LTC', P.ltc ? 'Inclusa' : 'Non inclusa', P.ltc ? 'se si perde l\'autosufficienza' : '']);
     S.push({t: 'Le scelte', p: 1, parti: [['cifre', scelte]]});
